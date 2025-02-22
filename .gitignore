@@ -162,6 +162,7 @@ cython_debug/
 #.idea/
 
 
-# db/*
+db_pdf/*
+df_txt/*
 # output/*
 src/bunkai-model-directory/*

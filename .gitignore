@@ -166,3 +166,4 @@ db_pdf/*
 df_txt/*
 src/bunkai-model-directory/*
 analysis_results/*
+*.pt

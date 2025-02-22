@@ -39,6 +39,8 @@ if __name__ == '__main__':
     city_names = []
     if "/" in args.input_value:
         city_names = args.input_value.split("/")
+    else:
+        city_names.append(args.input_value)
     # print(city_names)
         
     for city_name_use in city_names:

@@ -1,0 +1,1074 @@
+ペロブスカイト太陽光発電の開発の現状と可能性
+桐蔭横浜大学医用工学部教授
+池上和志
+ikegami@toin.ac.jp
+高効率・低コスト・軽量薄膜ペロブスカイト太陽電池の高耐久化開発
+ペロブスカイト太陽電池とは？
+桐蔭横浜大学で発明の
+次世代型太陽電池
+低コスト
+簡易な製造方法、安価な材料
+高効率（25%以上）
+低照度でも高い効率
+フレキシブル化
+課題
+高耐久化 高効率化 モジュール化高耐放射線化
+高効率と高耐久性を有する
+ペロブスカイト太陽電池モジュールの開発
+IoT電源として事業化
+宇宙用途への展開
+宇宙ホテル
+Internet of Things.
+ウェアラブル機器
+ApP
+月面利用
+宇宙用太陽電池
+モニタ機器
+温度・湿度・光耐久性
+2030年度における電源構成の目標
+分類
+2019年時点
+2030年
+（目標）
+22～24%
+2030年
+（令和3年発表）
+再生可能エ
+18%
+36〜38%
+非
+ネルギー
+化
+• 水素・
+0%
+石
+アンモニア
+原子力
+6%
+LNG
+37%
+化
+石
+石炭
+32%
+石油など
+7%
+0%
+20〜22%
+27%
+26%
+3%
+1%
+20～22%
+20%
+19%
+2%
+※「エネルギー基本計画（素案）の概要」（経済産業省）より作成
+2
+2030年度目標における再生可能エネルギー（36～38%）の内訳
+分類
+太陽光
+風力
+地熱
+水力
+バイオマス
+電源構成の比率（2030年度の目標）
+約15%
+約6%
+約1%
+約10%
+約5%
+※「エネルギー基本計画（素案）の概要」（経済産業省）より作成。
+3
+平地のみに限ると、高密度で設置されている
+（kw/kmi）
+450
+400
+350
+300
+250
+200
+150
+100
+50
+0
+426
+【平地面積あたりの太陽光設備容量】
+184
+63
+日本
+ドイツ
+イギリス
+国土面積
+平地面積※
+（国土面積に占める割合）
+太陽光の設備容量（GW）
+太陽光の発電量（億kWh）
+発電量（億kWh）
+太陽光の総発電量
+に占める比率
+26
+■
+フランス
+24
+■
+中国
+日
+38万km2
+13万km2
+（34%）
+56
+690
+10,277
+6.7%
+関東
+11
+10
+ー
+インド
+米国
+（出典）外務省HP （https://www.mofa.go.jp/mofai/area/index.html）、
+Global: Forest Resources Assessment 2020
+（http://www.fao.org/3/ca9825en/CA9825EN.pdf）
+IEA Market Report Series - Renewables: 2019（各国2018年度時点の発電量）、
+総合エネルギー統計（2019年度速報値）、FIT認定量等より作成
+4
+東京エリア使用率（東京電力パワーグリッド でんき予報より）
+7/11（TUE）
+22:35更新・速報
+前日実績はこちら
+▶
+6,000
+万kW
+5,000
+4,000
+3,000
+2,000
+1,000
+0
+0
+1
+2
+3
+4
+5
+6
+→
+使用電力の当日実績
+（5分間隔値）
+■
+使用電力の当日実績
+（1時間値）
+7
+8
+■
+9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+需要ピーク時
+使用率ピーク時
+時台
+供給力
+供給力
+使用電力の予測値
+太陽光発電実績
+→
+（5分間隔値）
+5
+太陽電池による発電量を増やすには？
+・高効率太陽電池の開発
+・曇り、雨天といった低照度環境で発電効率の
+高い太陽電池の開発
+・これまでの未利用の場所へ設置できる太陽電池
+の開発
+6
+・ 代表的な電気自動車のバッテリー容量
+40kWh
+・ 一般的な4人家族の1日の電力消費量
+約10kWh
+壁面発電ポテンシャル推計
+実施事業者
+実施場所
+実施期間
+東急不動産株式会社 1国際航業株式会社
+神奈川県横浜市
+2022年4月～2023年3月
+8
+100kWのソーラーパネル
+太陽電池一枚の出力
+0.4KW
+1700mmx
+1100mm
+= 1.9 m
+100kW
+バレーコート 3面分
+250枚分
+475m2
+9
+横浜市での太陽電池による発電量（100kWパネル）のシミュレーション
+Power Generetion/kwh
+14,000
+12,000
+10,000
+8,000
+6,000
+4,000
+2,000
+0
+12,756
+11,95412,079
+11,04511,22411.824
+9,77220,219
+9,842 9,667
+8,793 8,939
+January
+February
+March
+June
+そ
+August
+September
+October
+November
+December
+Month
+Estimated Power generation of a 100 kW solar panel in Yokohama
+area, according to METI solar panel simulation tool.
+10
+ペロブスカイト太陽電池、なぜ注目？
+●簡易な製造プロセスで、高効率太陽電池を実現できる。
+● プラスチック基板等、軽量フレキシブル基板への作製も可能
+● 既存のシリコン太陽電池との「タンデム化」も可能
+● 太陽電池の用途の拡大
+→ 従来の未設置スペースへの太陽電池の設置
+11
+各種太陽電池の効率の変遷（アメリカ再生可能エネルギー研究所）
+NREL
+Solar.Junc
+Boeing
+（IMM, 325.7x）
+（LM,418x）
+Spectrolab （5-J）
+NREL （6-J）
+NREL
+39.5%
+39.2%
+Boeing-
+■
+Spectrolab
+シリコン
+Sharp （IMM）
+ペロブスカイト
+NREL
+Thin-Film Technologies
+（IMM）
+Sharp （1MM）
+FhG-ISE
+ANREL （38.1x）
+35.5% b
+ALONGi
+© CIGS （concentrator）
+NREL （467x）
+NREL （MM）」
+LG
+KAUSTA
+33.9%
+NREL
+● CIGS
+.HZB
+32.9%
+O CdTe
+IES-UPM（1026x） FhG-ISE （117x）
+NREL
+Alta
+NREL
+Alta
+EPFL/CSEM
+0 Amorphous SiH （slabilzed）
+ー
+ー
+■II
+LG （258x）
+Devices
+ANREL
+jud Univ.
+FhG-ISE （232x）
+Alta
+Alta
+Emerging PV
+AA
+SunPower （large-area）A
+OIordPI
+Alla.
+NHZ/
+FhG-ISE
+O Dye-sensitized cels
+Perovskite cells
+nix （92x）
+Panasonic
+ーーーーム
+-ALG
+Oxiord PV KRICIMIT
+me
+Dxiord PV
+KRICTMI
+Perovskite/Si tandem （mongithic）
+=A7
+Panasonic
+Kanekae
+●LONGi
+FhG-ISE
+Alta
+AEPl
+ISFH
+noreal
+ONUNT
+Organic cels （various types）
+Organic tandem cells
+allasonH
+JSolexel ZSW
+INIST"UNIST
+USIC
+30.8%
+29.1%
+27.8%
+27.6%
+26.8%
+26.1%
+26.1%
+Sanyo
+Sanyo
+NREL
+SNREL （19.7X）First Solar
+SariodASI CroarU
+Inorganic cels （CZTSSe）
+0
+Quantum dot cells （various types）
+--
+115A8OZSW
+P0BR Solarfirontier
+Perovskite/CIGS tandem （monalithic）
+ZSW EMPA （Fex poly） NREL
+SCAS UCLA
+IHZE JinkoSolar Finst
+Ehe 1og
+Trina Sniar
+Solar
+Single-Junction GaAs
+A Single cryslal
+A Concentrator
+Y Thin-film crystal
+Crystalline Si Cells
+ロ Single crysta （concentrator）
+■
+Single crystal （non-concentrator）
+口
+Multicrystaline
+●
+Silicon heterostructures （HIT）
+♥ Thin-film crystal
+NREL
+NREL
+ISFH- #gole Emerging PV
+U. Stutigart
+aesFhG-ISE
+First Solar
+23.6%●
+23.3% O
+23.3% ■
+22.4%
+21.2% V
+19.2%
+18.1%
+（ Perovskite cells
+Northwestern University and University of Toronto
+Talp
+A Two-junction （concentrator）
+A Two-junction （non-concentrator）
+口 Four-junction or more （concentrator）
+D Four-junction or more （non-concentrator）
+UniSolar
+Mitsubishi
+（aSincSincSi）
+LG
+10ー大
+NIMS 2023-08
+Efficiency: 26.1%
+IBM IBM
+Voc: 1.174 V
+Konarka
+■4HJSC: 26.13 mA/cm2
+Solarmer←
+arka
+Konarka
+/UCLAS
+FF: 85.2%
+K
+Sumi-
+Area: 0.0493 cma
+tomo」
+Suns: 1
+Plextronics N
+Hellatek
+U. Dresden
+14.9%
+14.2%
+14.0% O
+13.0%
+/ NREL
+（ZnO/PbS-QD）
+（Rev. 09-31-2023
+5
+2010
+2015
+2020
+2025
+12
+ペロブスカイト太陽電池の研究開発の課題
+①実験環境
+②滴下量・速度
+ORION
+PAP Series
+PRECISION AIR PROCESSOR
+control monitor
+温度
+temperature
+PV
+240
+°C
+SV
+4.8
+heat pump indicator
+ORION
+©RUN
+humidification
+PV
+SV
+0 16
+%
+210
+く
+へ
+SET
+膜厚・表面解析
+an
+'S Ine.
+' Photonics
+000
+2S.Com
+⑤特性評価
+ecoel IV Curve Analyzer 3.0 for Kethley 2400 Serial Port
+ISET WUN
+♥ Auto sav
+comments
+Round Num
+statv /V
+stepV/V
+cmpl/A
+SrcDs/s
+NPLC
+00.
+000S
+area/ cme
+inPw/mwcm-
+Seqment
+100
+Check Isc
+Cmpl/A
+Isc/mA
+0,0866
+Pi Stop Check le
+Sicell
+Peccell
+1.027
+0.552
+0.43
+1101.8
+-6844
+CPECVdata
+Save data as text
+Javerdw udia
+0.06
+0.02
+Cereet/a
+002・
+004-
+006ー
+③ 回転速度、乾燥
+POSt.
+SLOPE RPM POSI TIME
+ペロブスカイト塗布の省力
+化・自動化
+→塗布溶液の改良
+→溶液供給を含めた
+システム構築
+→さらに作製した
+太陽電池の評価へ
+13
+現状の課題
+® ペロブスカイト塗布工程の制御
+→ 塗布、乾燥工程で、より均質な塗膜を作ることができるか。
+厚み1um
+® 封止プロセスにおける耐熱性→既存プロセスが適用可能か
+® 湿度に対する安定性
+® 塗布溶液の安定性
+® ペロブスカイト太陽電池の光劣化・回復の問題
+® 性能評価法
+® ホール輸送層
+®透明導電性基板等周辺材料
+14
+硬いガラス基板から、軽くて薄い樹脂基板へ
+heaoi
+15
+フレキシブル、軽量太陽電池→ペロブスカイト太陽電池
+機械的な曲げ（半径5mm）に対しても高い耐久度を持つ
+→設置場所を選ばない商品化
+1.0-
+90.8-
+0.6-
+0.4-
+0.2-
+0.0-
+一旦ー
+ー！
+0
+200
+400
+600
+Bending Cycles
+CS0.05（FAo.83MAo.17）0.85Pb（6.8sBro.17）3
+1000
+16
+ペロブスカイト太陽電池の期待される用途
+気球膜上発電
+住宅の屋根
+窓や壁
+IoT機器の電源
+車の屋根
+17
+ペロブスカイト太陽電池
+桐蔭横浜大学におけるモジュール試作
+6セル直列ペロブスカイトフィルムモジュール、ラボ試作品
+厚さ，く130km
+サイズ，7x7cm；重量 2.0g
+ガスバリアフィルム封止品、製作：2021年10月6日
+19
+シリコン太陽電池は、厚みは
+ウエハの大型化
+（10cm前後→20cm角以上）
+300um （0.3mm）
+ウエハの薄型化
+（300km以上→150km以下）
+光
+リボンシリコンウエハ
+電極
+■n型c-Si
+p型c-Si
+（光を全部吸収する
+ために厚みが必要）
+Siインゴット（塊）を
+切断・研磨して
+ウエハを作成
+（一般的な手法）
+光
+21cm角多結晶シリコン太陽電池
+（提供：Q-Cells）
+（中で乱反射させる）
+出典：産総研さまざまな太陽電池
+融けたシリコンを
+直接シート状にする
+20
+ペロブスカイト太陽電池の発電層は、1Jm以下
+gold
+Hole transport layer
+perovskite
+TiOs anatase
+FTO
+808000 190KVYOKSE（U）
+8dum
+21
+1umがどれくらい薄いか？
+細菌
+ヒトの細胞
+10mm
+100mm
+1
+MIl
+10cm
+1
+10
+i
+ペロブスカイト
+太陽電池の発電層の厚み
+100km
+10
+1mm
+22
+23
+ペロブスカイト太陽電池の気球実験成層圏プラットフォームでの利用可能性
+大気球実験大櫢町北海道
+C
+JAXA ISAS
+2020年、2021年桐蔭横浜大学院生も実験
+参加
+24
+宇宙用太陽電池としてのペロブスカイト太陽電池
+1MeV 電子線照射
+1X
+： 1016/cm
+照射
+Pmax 保存率
+照射前変換効率
+照射後変換効率
+シリコン
+太陽電池
+Si
+0.60
+17.0%
+10.2%
+3接合化合物
+太陽電池
+InGaP/GaAs/
+Ge
+0.62
+28.5%
+17.7%
+ベロブスカイト
+太陽電池
+CH,NH,Pbl』
+1.0
+20.0%（仮定）
+20.0%
+出典 宇宙研の半導体デバイス研究
+一深宇宙探査船団を実現するためにー
+宇宙機応用工学研究系特任教授 廣瀬和之
+25
+太陽電池の種類、効率、コスト
+1. 結晶Si セル効率26.1%（市販モジュール ＜20%）
+インゴット原価$80/kg →$30/kg まで価格破壊（中国）
+現状のコスト ＜$50/m？（工場出荷時）
+2. 薄膜Si セル効率14.0%（市販モジュール ＞12%）
+現状のコスト：結晶Siの数倍 → ほぼ撤退
+3. CIGS セル効率23.4%（市販モジュール 15~16%）
+目標コスト：＜$100/m2
+4. CdTe セル効率22.1%（市販モジュール 18.2%）
+目標コスト：＜$30/m？ 太陽電池として最安値目指す（＜0.6ドル/p）
+5.有機系（有機材料を発電材料に用いるもの）
+（1）色素増感型（DSSC）：電解液使用、セル効率 14%（アデカ）
+（2）有機薄膜型（OPV）：全固体型、セル効率 17%（海外の大学）
+（3）ペロブスカイト型：全固体型、セル効率26.1%（韓国）
+モジュール、20.5%
+26
+CH3NH3Pbl3 Structure
+e
+TiO2
+Perovskite compound
+27
+Toin University of
+Yokohama
+ハロゲン組成によって吸収特性が変わる
+T
+Cl
+AMAMAN
+MW
+Luminescence
+200mm
+400
+500
+600
+wavelength （nm）
+700
+Quantum dots consisting of CsPbXs （X=Cl,Br, 1）
+S. Wei, et al. Chem. Cummun. 52, 7265（2016）
+28
+2009年に最初の論文を発表（アメリカ化学会）
+JACS
+Communication
+Organometal Halide Perovskites as
+Visible-Light Sensitizers for Photovoltaic Cells
+Akihiro Kojima, Kenjiro Teshima, Yasuo Shiral, and Tsutomu Miyasaka
+JAm. Chem. Soc.， Article ASAP・DOl： 10.1021/ja809598r ・ Publication Date （Web）： 14 April 2009
+Downloaded from http://pubs.acs.org on April 14, 2009
+Visible light
+e'l
+D
+IPCE /％
+TiO2
+Perovskite nanocrystaline sensitizers
+70
+60-
+50-
+CH3NHoPbBrs
+CH;NHsPbls
+40-
+30
+20-
+10-
+0
+400 500 600 700 800
+Wavelength / nm
+時の効率は、3.8%
+29
+ペロブスカイト結晶の発見と、太陽電池への応用
+CaTiO3
+1850〜
+MAPbBrs
+1978〜
+30
+ペロブスカイトの発電 → 高電圧を出力する
+2.0
+1.5
+AVthemm
+OC
+AVnon-rad
+OC
+V
+Eg/q
+Vmax-
+OC
+Vo.
+1.0
+0.5
+0.0
+（FA.Cs）Pbe.Snos3
+MAPDl3
+（MA.FA.CS.RDPb016.8%
+Stranks et al. ACs Energy Letters 2 （2017）
+FACSPb（085 oala
+31
+Toin University of Yokohama
+結晶粒子サイズを大きくすることで、再結合損失を小さくし、開回路電圧Voc
+を高める→エネルギー変換効率を高める
+1.2
+n=1.0
+n= 1.3
+less
+sRH recombination os Trap density, Nt
+CB
+Large
+1.1-
+¥0101
+n=1.8
+粒界の面積
+do.. Trap density, N.
+SRH recombination
+結晶粒子のサイズ
+0.9+
+1
+100
+Light intensity/mW cm-z
+〇00
+V
+B
+32
+ペロブスカイト太陽電池は、軽量化が可能
+ひ
+Power-per-weight （W g
+100
+10
+0.1
+0.01
+CIGS （glass）
+CIGS （polyimide）
+Poly-si
+c-Si
+InGaP/GaAs/Ge
+3-mil silicon
+GaAs
+Ultrathin
+CdTe
+Ultrathin InP
+Ultrathin Cics
+Ultrathin o-si
+Ultrathin OPV
+Ultrathin perovskite
+33
+ペロブスカイト太陽電池の高効率を支えるのは高い出力電圧
+▶ 電荷の拡散長が大きい（>1 um）
+▶ 欠陥の生成に対して、寛容な発電性能
+（defect tolerance）
+> 光吸収層が薄い（<0.5 um）
+電子／正孔の再結合が少ない
+開回路電圧（Voc）の増加
+>高い変換効率
+34
+ペロブスカイト太陽電池の特長
+電極
+正孔輸送層
+ペロブスカイト結晶
+電子輸送層
+1ooum
+-I
+• 小さいキャリア有効質量
+・ 長い少数キャリア拡散長
+・ 太陽電池に適したバンドギャップ
+• 大きい光吸収係数
+• 1um厚以下
+・低温成膜可能
+・ 溶液塗布法で
+製造可能
+出典 桐蔭横浜大学
+35
+省エネを進めるためには？屋内でのセンサー用途
+36
+室内
+1000ルクス
+壁面
+200ルクス
+窓際
+1万ルクス
+屋外
+5万ルクス
+～10万ルクス
+37
+ペロブスカイト太陽電池 光発電素子商品としての提供価値
+Dopant-Free Polymer HTM-Based CsPblzBr Solar Cells with
+Efficiency Over 17% in Sunlight and 34% in Indoor Light
+Zhanglin Guo，* Ajay Kumar jena， Izuru Takei， Masashi lkegami， Ayumi lshi，
+Youhei Numata, Naoyuki Shibayama, and Tsutomu Miyasaka*
+Adr. Func. Mat. 2021,31,2103614
+屋外 1sunの光量
+Perovskite
+Jsc （mAcm2）
+CsPbizBr
+15.0
+Voc （V）
+1.42
+FF （%）
+81.3
+PCE （%）
+17.4
+1.42Vは太陽電池として最高電圧
+屋内
+1 1／500 sunの光量屋内LED照明光（2001ux）
+Perovskite
+CsPblzBr
+Jsc （JA cm'2）
+21.0
+Voc （V）
+1.14
+FF （%）
+86.0
+PCE （%）
+34.2
+＞1.1Vは屋内素子として最高電圧
+光環境を選ばす、屋外から屋内までの光量において1000W/m2～1W/m2の広い範囲で高効率の発電が
+できる。もちろん曇天/雨天も利用できる。
+38
+屋内 IoT デバイスの電源として最も有力（照明 200luxにおける発電能力）
+Crys. Si
+Comparison of output power from PV cells
+Amorph. Si
+DSSC
+Perovskite
+PV cells
+Ricoh
+Sunlight
+100mw/cm2
+（100,000 LUX）
+Indoor light
+77 uW/cm2
+（200 LUX）
+22mW/cm？
+10.3mW/cm~
+14 mW/cm2
+20~23mW/cm？
+0.9JW/cm？
+6.5gW/cm？
+20JW/cm2
+22JW/cm？
+SMART R MOUSE
+（光学センサー方式マウス）
+RICOH EH DSSC2832搭載
+© Ricoh
+39
+省エネに貢献する環境センサー ペロブスカイト太陽電池による駆動
+＜実証実験＞
+太陽電池搭載CO2センサー
+2200
+Value
+2000
+24
+9020-
+18-
+Concentration
+CO2濃度（ppm）
+11:00
+12:00
+72月2020
+1890
+講演開始 pale
+Temperature
+※※
+14:00
+15:00
+休憩時間
+→*
+16:00
+●
+Data
+72月2
+Data
+宇宙探査ハブ・イノベーション
+フォーラム（2020.2.7）
+会場でのCO2濃度測定デモ
+11:00
+温度（C）
+12:00
+72月2020
+13:00
+Date
+Humidity
+湿度（％RH）
+14:00
+15:00
+16:00
+72月2
+56-
+／Data
+54m
+8052-11
+50ー
+48
+.........
+T
+11:00
+12:00
+72月2020
+13:00
+14:00
+15:00
+16:00
+72月2
+Date
+出典
+JAXA 宇宙探査イノーベンションハブ成果報告より
+40
+桐蔭横浜大学におけるモジュール試作
+6セル直列ペロブスカイトフィルムモジュール、ラボ試作品
+厚さ，＜130 km
+サイズ，7x7cm；重量 2.0g
+原価：約100円（うちペロブスカイト約2円）
+ガスバリアフィルム封止品、製作：2021年10月6日
+41
+42
+インクジェット法によるペロブスカイト太陽電池の作製
+ペロブスカイト太陽電池モジュール
+4直列モジュール
+フレキシブル太陽電池モジュール
+デザイン性のあるモジュール
+Peccel
+"TOIN UNIVERSITY
+OF YOKOHAMA
+GK紀州技部
+RICOH
+imagine. change.
+43
+ペロブスカイト太陽電池はどのような製品か？
+ペロブスカイト太陽電池は、部品である。
+プロダクト
++ デザイン =
+プラットフォーム
+ペロブスカイト
+太陽電池の
+搭載製品
+製造設備
+事業化
+産 製品の信頼性・安全性を重視。
+官社会実装を進めたい。実証試験を進めたい。
+学性能を上げたい。効率をあげて論文を書きたい。✕
+X
+ペロブスカイト太陽電池の材料開発、製造プロセス開発の頼性向上に
+寄与する、小規模の実証試験、プラットフォームの構築
+44
+Toin University of Yokohama
+東芝、フレキシブルモジュール
+面積703cm？のモジュール、このサイズでは世界最高効率16.6%
+2023年2月11日、東急田園都市線青葉台駅、2023年8月1日桐蔭横
+浜大学で展示、
+45
+Toin University of Yokohama
+SAULE
+TECHNOLOGIES
+Technology
+Products
+Blog
+About
+Press
+Contact
+SAULE
+TECHNOLOGIES
+インクジェット印刷によるペロブスカイトの
+Fully Printed Solar Cells
+CIEK ML SC ORZECH LASK 100g
+580742809348
+7,59
+ZUSZT
+75:30 z0kg
+005-018216
+Read the story
+46
+カーボンニュートラルを目指す、「プロダクトデザイン」
+春電センター
+電力消費に関する
+地域住民一人当たり
+のCO2発生量
+地域ごとの
+エネルギー管理ハブ
+地方自治体（市、町、村）
+C02量に
+応じた地域への
+グリーン支援交付金
+）
+CO2排出抑制交付金
+政府（経産省）
+47
+再生可能エネルギー開発の方向性 カーボンニュートラルを目指す
+国民のすべてが、地域エネルギーコミュニティーの住民として登録し、CO2排出の評価を受ける
+グリッドー
+地域
+発電
+蓄電センター
+世帯
+電力消費に関する
+地域住民一人当たり
+のCO2発生量
+地域ごとの
+エネルギー管理ハブ）4
+CO2量に
+応じた地域への
+グリーン支援交付金
+CO2排出抑制交付金
+政府（経産省）
+地方自治体（市、町、村）
+蓄電
+発電
+地域エネルギー共有グリッドコミュニティー
+48
+横浜市内区民まつりなどで、
+ペロブスカイト太陽電池をご紹介
+※ロブスガィト失問題池
+桐産横浜大学
+ベロフスカイト
+2024年1月発刊
+化学の要点
+シリーズ
+48
+ペロブスカイト
+太陽電池
+光発電の特徴と産業応用
+日本化学会［編」
+宮坂 力［著］
+共立出版
+CS.JReVEL
+48
+Science and
+Technology of
+Perovskite
+Solar Cells
+ペロブスカイト
+太陽電池の
+学理と技術
+カーポンニュートラルを担う
+国産グリーンテクノロジー
+日本化学会編
+化学同人
+50

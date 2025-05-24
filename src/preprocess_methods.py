@@ -22,7 +22,7 @@ def preprocess(output_txt_file_list):
     
     for output_txt_file in output_txt_file_list:
         
-        segmented_txt_file = f'{output_txt_file.replace(".txt", "")}_segmented.pkl'
+        segmented_txt_file = f'{output_txt_file.replace("db_txt", "db_pdf").replace(".txt", "")}_segmented.pkl'
         
         # method(output_txt_file, segmented_txt_file)
         

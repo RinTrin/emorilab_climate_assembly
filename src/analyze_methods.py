@@ -17,7 +17,6 @@ def analyze(action_plans_pkl_pth_list, input_materials_pkl_pth_list):
     for action_pkl_pth in action_plans_pkl_pth_list:
         action_data = pickle_load(action_pkl_pth)
         print(action_data)
-    hjk 
     
     for action_pkl_pth in action_plans_pkl_pth_list:
         action_data = pickle_load(action_pkl_pth)
@@ -39,22 +38,15 @@ def analyze(action_plans_pkl_pth_list, input_materials_pkl_pth_list):
                 print(action_data[m_a])
                 print(input_data[n_a])
                 print()
-            # hjk
-            
             
             ### テキスト全体で類似度を計算する
             cosine_scores_ave = torch.mean(cosine_scores)
-            # print(cosine_scores)
-            # print(cosine_scores_ave)
-            
             save_dict[os.path.basename(action_pkl_pth).replace("_segmented.pkl", "")][os.path.basename(input_pkl_pth).replace("_segmented.pkl", "")] = cosine_scores_ave.item()
     
     # 類似度の高い組み合わせを取得
     pad_tensor = rnn.pad_sequence(save_cosine_scores, batch_first=True)
     print(pad_tensor.size())
     argmax_list = torch.argmax(pad_tensor).tolist()
-    print(argmax_list)
-    bhjk
     
     csv_pth = os.path.join(Path(__file__).parents[1], "output/analyzed_each_text_file.csv")
     df = pd.DataFrame(save_dict).sort_index()

@@ -17,6 +17,7 @@ def get_data(city_name, mode='actionplan'):
         if city_file_pth.endswith('.pdf'):
             city_file_pth = os.path.join(city_folder_pth, city_file_pth)
             output_file_pth = f'{city_file_pth.replace(".pdf", "")}.txt'
+            # print("CHECKKKKKK", output_file_pth)
             output_file_pth = output_file_pth.replace("db_pdf", "db_txt")
             if os.path.exists(output_file_pth):
                 output_txt_file_list.append(output_file_pth)

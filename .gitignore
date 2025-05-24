@@ -164,5 +164,5 @@ cython_debug/
 
 db_pdf/*
 df_txt/*
-# output/*
 src/bunkai-model-directory/*
+analysis_results/*

@@ -175,3 +175,5 @@ output.txt
 garbage/*
 test/*
 db_merged_txt/*
+src_rq2/punctuation_train/*
+src_rq2/reference_politicalbias.csv

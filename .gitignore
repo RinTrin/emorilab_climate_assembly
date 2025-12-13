@@ -174,3 +174,4 @@ db_youtube_txt/*
 output.txt
 garbage/*
 test/*
+db_merged_txt/*

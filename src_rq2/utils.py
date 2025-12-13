@@ -1,0 +1,235 @@
+import pandas as pd
+import os
+import numpy as np
+
+def filter_top1_score(csv_path, threshold=0.7):
+    """
+    Top1_Score列の値が指定されたしきい値以下の行を削除し、
+    新しいCSVを作成してそのパスを返す関数。
+
+    Parameters:
+    csv_path (str): 入力CSVファイルのパス
+    threshold (float): Top1_Scoreのしきい値（この値以下を削除）
+
+    Returns:
+    str: 新しく作成されたCSVファイルのパス（analyzed_csv_pth）
+    """
+    # CSV読み込み
+    df = pd.read_csv(csv_path)
+
+    # フィルタリング
+    df_filtered = df[df['Top1_Score'] > threshold]
+
+    # 新しいファイル名を生成
+    base, ext = os.path.splitext(csv_path)
+    analyzed_csv_pth = f"{base}_filtered{ext}"
+
+    # 新しいCSVとして保存
+    df_filtered.to_csv(analyzed_csv_pth, index=False)
+
+    return analyzed_csv_pth
+
+import subprocess
+import io
+import os
+from pydub import AudioSegment
+from tempfile import NamedTemporaryFile
+from openai import OpenAI  # ← これが正しいv1.xの使い方
+
+# ★ OpenAI APIキー（事前に設定）
+# openai.api_key = os.getenv("OPENAI_API_KEY")  # または直接書く 'sk-...'
+
+
+# ✅ Whisper API用のOpenAIクライアント（APIキー埋め込み or 環境変数）
+client = OpenAI(api_key="OPENAI_API_KEY")
+# または直接書く場合：
+# client = OpenAI(api_key="sk-...")
+
+# === Step 1: YouTube音声をWAVとして取得 ===
+def get_audio_segment_from_youtube(url: str) -> AudioSegment:
+    yt_proc = subprocess.Popen(
+        ["yt-dlp", "-f", "bestaudio", "-o", "-", url],
+        stdout=subprocess.PIPE
+    )
+    ffmpeg_proc = subprocess.Popen(
+        ["ffmpeg", "-i", "pipe:0", "-f", "wav", "-ar", "16000", "-ac", "1", "pipe:1"],
+        stdin=yt_proc.stdout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL
+    )
+    audio_bytes = ffmpeg_proc.stdout.read()
+    audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="wav")
+    return audio
+
+# === Step 2: 音声分割 ===
+def split_audio(audio: AudioSegment, chunk_length_ms: int = 10 * 60 * 1000):
+    return [audio[i:i + chunk_length_ms] for i in range(0, len(audio), chunk_length_ms)]
+
+# === Step 3: Whisper APIで書き起こし（v1.xスタイル） ===
+def transcribe_chunk_with_whisper(chunk: AudioSegment, language='ja', initial_prompt=None):
+    with NamedTemporaryFile(suffix=".wav") as temp_file:
+        chunk.export(temp_file.name, format="wav")
+        with open(temp_file.name, "rb") as f:
+            response = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f,
+                language=language,
+                initial_prompt=initial_prompt,
+                response_format="text"
+            )
+    return response
+
+# === Step 4: 実行制御 ===
+def transcribe_youtube_to_text(url: str, output_path="transcript.txt", language='ja'):
+    print("🔊 音声をYouTubeから取得中...")
+    audio = get_audio_segment_from_youtube(url)
+
+    print(f"✂️ 音声長: {len(audio) / 60000:.2f} 分 → 分割処理中...")
+    chunks = split_audio(audio)
+    print(f"🔹 チャンク数: {len(chunks)}")
+
+    transcript_parts = []
+    for i, chunk in enumerate(chunks):
+        print(f"🧠 Whisper API実行中... チャンク {i+1}/{len(chunks)}")
+        try:
+            text = transcribe_chunk_with_whisper(
+                chunk,
+                language=language,
+                initial_prompt="この文章は丁寧な文体で記述されています。文には句点と読点が適切に付けられています。" if i == 0 else None
+            )
+            transcript_parts.append(text.strip())
+        except Exception as e:
+            print(f"⚠️ チャンク {i+1} の処理中にエラーが発生しました: {e}")
+            transcript_parts.append(f"[Chunk {i+1}]\n[エラー発生]\n")
+
+    full_transcript = "\n".join(transcript_parts)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(full_transcript)
+
+    print(f"✅ 書き起こし完了: {output_path}")
+
+def merge_materialtext_and_youtubetext(city_name, ROOT):
+    import yaml
+    from pathlib import Path
+
+    # city_name は既に定義済み
+    # city_name = "Atugi"
+
+    root = Path("/Users/rintrin/codes/emorilab_climate_assembly")
+
+    # 出力ディレクトリ
+    out_dir = root / "db_merged_txt" / city_name
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # 見出し
+    HEADER_ORG = "=== Original Input Material ==="
+    HEADER_YT  = "=== YouTube Transcription (punc_added) ==="
+
+    # YAML 読み込み
+    with open(root / "src_rq2/inputmaterial_info.yaml", "r", encoding="utf-8") as f:
+        lecture_info = yaml.safe_load(f)
+    lecture_info_city = lecture_info[str(city_name)]
+
+    processed, missing_files = [], []
+
+    for lecture_name, lecture_each_info in lecture_info_city.items():
+        # 入力資料パス
+        input_path = root / "db_txt" / city_name / "inputmaterial" / lecture_each_info["Inputmaterial_txt_path"]
+
+        # YouTube 側パス（punc_added固定）
+        yt_rel = lecture_each_info["Youtube_txt_path"]
+        yt_stem = Path(yt_rel).stem.replace("_youtube_txt", "_youtube_txt_punc_added")
+        yt_path = root / "db_youtube_txt" / city_name / f"{yt_stem}.txt"
+
+        # 存在チェック
+        if not input_path.exists():
+            missing_files.append((lecture_name, "inputmaterial", input_path))
+            continue
+        if not yt_path.exists():
+            missing_files.append((lecture_name, "youtube_punc_added", yt_path))
+            continue
+
+        # 出力パス
+        base_name = Path(input_path).stem
+        out_path = out_dir / f"{base_name}_merged.txt"
+
+        # 読み込み
+        with open(input_path, "r", encoding="utf-8") as f:
+            input_text = f.read().strip()
+        with open(yt_path, "r", encoding="utf-8") as f:
+            yt_text = f.read().strip()
+
+        # マージ
+        merged = (
+            f"{HEADER_ORG}\n{input_text}\n\n"
+            f"{HEADER_YT}\n{yt_text}\n"
+        )
+
+        # 書き出し
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(merged)
+
+        processed.append((lecture_name, out_path.name))
+
+    # 結果出力
+    print(f"\n=== {city_name} のマージ結果 ===")
+    if processed:
+        print("✅ マージ完了:")
+        for lec, outn in processed:
+            print(f" - {lec} → {outn}")
+    if missing_files:
+        print("\n⚠️ ファイル未検出:")
+        for lecture, kind, path in missing_files:
+            print(f" - {lecture} [{kind}]: {path}")
+    else:
+        print("すべてのテキストをマージしました ✅")
+
+import pickle
+def pickle_load(pth):
+    with open(pth, 'rb') as f:
+        return pickle.load(f)
+
+def input_organize(input_data):
+    # すでに文単位のリスト前提。念のためフィルタのみ。
+    new_input_data = []
+    for s in input_data:
+        if not isinstance(s, str):
+            continue
+        s = s.strip()
+        if len(s) <= 10:
+            continue
+        if s.isdigit() or s.isnumeric():
+            continue
+        new_input_data.append(s)
+    return new_input_data
+
+def _to_np32(x):
+    if isinstance(x, list):
+        x = np.array(x)
+    if hasattr(x, "detach"):  # torch.Tensor
+        x = x.detach().cpu().numpy()
+    return np.asarray(x, dtype=np.float32)
+
+def _finite(a): return np.isfinite(a).all()
+
+# === 使用例 ===
+if __name__ == "__main__":
+    YOUTUBE_URL = "https://www.youtube.com/watch?v=Fyi9K7_le5M"  # ← 動画URLをここに入れる
+    transcribe_youtube_to_text(YOUTUBE_URL, output_path="output.txt", language='ja')
+#     import yaml
+
+#     # YAMLファイルの読み込み
+#     with open("/Users/rintrin/codes/emorilab_climate_assembly/src_rq2/inputmaterial_info.yaml", "r", encoding="utf-8") as f:
+#         data = yaml.safe_load(f)
+
+#     # テキストファイルを生成
+#     for area, lectures in data.items():
+#         for lecture_key, lecture_info in lectures.items():
+#             txt_path = lecture_info.get("Youtube_txt_path")
+#             txt_path = os.path.join("/Users/rintrin/codes/emorilab_climate_assembly/db_youtube_txt", txt_path)
+#             if txt_path and not os.path.exists(txt_path):
+#                 with open(txt_path, "w", encoding="utf-8") as txt_file:
+#                     txt_file.write("")  # 空のファイルとして作成
+#                 print(f"Created: {txt_path}")
+#             else:
+#                 print(f"Skipped (already exists or missing path): {txt_path}")

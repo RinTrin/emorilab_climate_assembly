@@ -5,7 +5,7 @@ import subprocess
 
 from calc_similarity import calc_similarity_ja
 
-from input_organize import get_sentences
+from input_organize import get_sentences, get_sentences_annotated
 from analyses import actor_analysis, presentation_length_analysis #, expert_words_analysis
 from utils import filter_top1_score
 
@@ -18,13 +18,11 @@ def pipeline(city_name=None):
     まず、pdfから文字起こししたテキストとyoutubeから文字起こしした文章をそのまま統合。
     その後、初等の文分解関数Bunkai()を用いて、文のリストをpickleに格納。
     これらを情報提供とアクションプランの両方で実施。
-    TODO: 櫻井さんに、youtubeからの文字起こしを直してもらう。
-    TODO: アクションプランの方も、同様に直してもらう。
+    TODO: 櫻井さんに、youtubeからの文字起こしを直してもらう。4B1とアクションプランだけ。
     TODO: 一人の講演者に対して2つのインプット資料がある時の対処を決める。
     """
-    input_sentences_pkl = get_sentences(city_name, mode="inputmaterial")  # ← マージ後TXTを使って分割
-    # action_sentences_pkl = get_sentences(city_name, mode="actionplan")    # ← PDF由来TXTのみで分割
-
+    input_sentences_pkl = get_sentences_annotated(city_name, mode="inputmaterial")  # ← マージ後TXTを使って分割
+    action_sentences_pkl = get_sentences(city_name, mode="actionplan")    # ← PDF由来TXTのみで分割
     """
     続いて、SentenceBertJapanese(芝山&新納, 2021; https://ipsj.ixsq.nii.ac.jp/record/212207/files/IPSJ-NL21249007.pdf)を使用。
     論文内では、使用モデルは「東北大版 BERT と NICT 版 BERT から構築した SentenceBERT が同程度の高い性能を示した」とある中で、利用可能性と評判？から、cl-tohoku/bert-base-japaneseモデルを使用。
@@ -45,6 +43,7 @@ def pipeline(city_name=None):
 
     # info for analyses
     presenter_role_dict = return_presenter_role_dict(city_name)
+    # print("PREPRERE", presenter_role_dict)
     
     """
     注目はあまりされていませんが、日本語の政治文書を、右派左派で数値化した論文が2024年に出版されている。（https://arxiv.org/pdf/2405.07320 ）

@@ -161,21 +161,22 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+*.pt
 .DS_Store
 db_pdf/*
 db_txt/*
-src/bunkai-model-directory/*
+db_youtube_txt/*
+db_youtube_txt_annotated/*
+db_merged_txt/*
+
 analysis_results/*
-db_txt/*
-db_pdf/*
-*.pt
-db_youtube_txt/*
-db_youtube_txt/*
+
 output.txt
 garbage/*
 test/*
-db_merged_txt/*
+src/bunkai-model-directory/*
 src_rq2/punctuation_train/*
 src_rq2/reference_politicalbias.csv
 .env
 *.env
+test.py

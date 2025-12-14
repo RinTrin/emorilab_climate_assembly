@@ -36,12 +36,8 @@ from pydub import AudioSegment
 from tempfile import NamedTemporaryFile
 from openai import OpenAI  # ← これが正しいv1.xの使い方
 
-# ★ OpenAI APIキー（事前に設定）
-# openai.api_key = os.getenv("OPENAI_API_KEY")  # または直接書く 'sk-...'
-
-
 # ✅ Whisper API用のOpenAIクライアント（APIキー埋め込み or 環境変数）
-client = OpenAI(api_key="OPENAI_API_KEY")
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 # または直接書く場合：
 # client = OpenAI(api_key="sk-...")
 
@@ -210,7 +206,148 @@ def _to_np32(x):
         x = x.detach().cpu().numpy()
     return np.asarray(x, dtype=np.float32)
 
+
 def _finite(a): return np.isfinite(a).all()
+
+
+import os
+import json
+import pickle
+import hashlib
+from datetime import datetime
+from openai import OpenAI
+from typing import Optional
+
+def _sha256(s: str) -> str:
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()
+
+def _ensure_dir(p: str) -> None:
+    os.makedirs(p, exist_ok=True)
+
+def generate_reference_data_climate_cached(
+    n_texts_each: int = 5,
+    cache_dir: str = "/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/political_analysis/reference_cache",
+    model: str = "gpt-5.2",
+    seed: Optional[int] = 42,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    気候変動テーマの right/left 参照文を GPT-5.2 で生成し、
+    json / pkl にキャッシュして再利用する。
+
+    戻り値:
+        {"right_texts": [...], "left_texts": [...]}
+    """
+    _ensure_dir(cache_dir)
+
+    # --- 仕様（これが同じなら同じキャッシュを使う） ---
+    spec = {
+        "theme": "climate_change_ideology_axis_jp",
+        "n_texts_each": n_texts_each,
+        "length_chars": [120, 280],
+        "sentences": [3, 7],
+        "seed": seed,
+        "definition_right": "規制強化や急進的削減に慎重。不確実性、自然変動、コスト、雇用、国益、エネルギー安全保障を重視し、適応や技術で対応する立場。",
+        "definition_left": "気候危機（1.5℃など）を前提に、迅速な排出削減、再エネ拡大、規制、公正な移行や気候正義を重視する立場。",
+    }
+
+    spec_key = _sha256(json.dumps(spec, ensure_ascii=False, sort_keys=True))[:16]
+    json_path = os.path.join(cache_dir, f"reference_data_{spec_key}.json")
+    pkl_path  = os.path.join(cache_dir, f"reference_data_{spec_key}.pkl")
+
+    # --- キャッシュ優先 ---
+    if not force_refresh:
+        if os.path.exists(json_path):
+            with open(json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        if os.path.exists(pkl_path):
+            with open(pkl_path, "rb") as f:
+                return pickle.load(f)
+
+    # --- GPT生成 ---
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY が設定されていません")
+
+    client = OpenAI(api_key=api_key)
+
+    schema = {
+        "name": "reference_data_schema",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "right_texts": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": n_texts_each,
+                    "maxItems": n_texts_each,
+                },
+                "left_texts": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": n_texts_each,
+                    "maxItems": n_texts_each,
+                },
+            },
+            "required": ["right_texts", "left_texts"],
+            "additionalProperties": False,
+        },
+    }
+
+    prompt = f"""
+    テーマ：気候変動（温暖化・脱炭素・エネルギー政策）
+
+    条件：
+    - 日本語
+    - 政治家の答弁・演説風
+    - 各文 3〜7文、120〜280文字程度
+    - right_texts を {n_texts_each} 本
+    - left_texts を {n_texts_each} 本
+    - 実在の人物名・政党名・メディア名・URLは禁止
+
+    立場定義：
+    - right_texts：
+    {spec["definition_right"]}
+
+    - left_texts：
+    {spec["definition_left"]}
+
+    必ず指定スキーマに一致する JSON のみを出力してください。
+    """
+
+    resp = client.responses.create(
+        model=model,
+        input=[
+            {"role": "system", "content": "あなたは日本語の気候変動専門家言説データ生成アシスタントです。"},
+            {"role": "user", "content": prompt.strip()},
+        ],
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "reference_data",
+                "strict": True,
+                "schema": schema["schema"],  # ← あなたが作った中身を使う
+            }
+        }
+    )
+
+    data = json.loads(resp.output_text)
+
+    # --- 軽い検証 ---
+    for k in ("right_texts", "left_texts"):
+        if k not in data or len(data[k]) != n_texts_each:
+            raise ValueError(f"生成結果が不正です: {k}")
+
+    # --- 保存 ---
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    with open(pkl_path, "wb") as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return data
+
+
+
 
 # === 使用例 ===
 if __name__ == "__main__":

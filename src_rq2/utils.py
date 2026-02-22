@@ -1,6 +1,15 @@
 import pandas as pd
 import os
 import numpy as np
+import yaml
+import subprocess
+import io
+import os
+from pydub import AudioSegment
+from tempfile import NamedTemporaryFile
+from openai import OpenAI  # ← これが正しいv1.xの使い方
+
+ROOT = "/Users/rintrin/codes/emorilab_climate_assembly"
 
 def filter_top1_score(csv_path, threshold=0.7):
     """
@@ -29,12 +38,6 @@ def filter_top1_score(csv_path, threshold=0.7):
 
     return analyzed_csv_pth
 
-import subprocess
-import io
-import os
-from pydub import AudioSegment
-from tempfile import NamedTemporaryFile
-from openai import OpenAI  # ← これが正しいv1.xの使い方
 
 # ✅ Whisper API用のOpenAIクライアント（APIキー埋め込み or 環境変数）
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
@@ -70,7 +73,6 @@ def transcribe_chunk_with_whisper(chunk: AudioSegment, language='ja', initial_pr
                 model="whisper-1",
                 file=f,
                 language=language,
-                initial_prompt=initial_prompt,
                 response_format="text"
             )
     return response
@@ -91,7 +93,7 @@ def transcribe_youtube_to_text(url: str, output_path="transcript.txt", language=
             text = transcribe_chunk_with_whisper(
                 chunk,
                 language=language,
-                initial_prompt="この文章は丁寧な文体で記述されています。文には句点と読点が適切に付けられています。" if i == 0 else None
+                initial_prompt=None
             )
             transcript_parts.append(text.strip())
         except Exception as e:
@@ -348,11 +350,81 @@ def generate_reference_data_climate_cached(
 
 
 
+def add_presenter_columns_to_analyzed_csv(analyzed_csv_pth, presenter_role_dict, actionplan_excel_sheetname):
+    """
+    analyzed_csv_pth に含まれる
+    Top1/2/3_SourceFile から Presenter 名を引き当て、
+    TopX_Presenter 列を追加して同じCSVに上書き保存する
+    """
+    df = pd.read_csv(analyzed_csv_pth)
+
+    for i in [1, 2, 3]:
+        src_col = f"Top{i}_SourceFile"
+        pres_col = f"Top{i}_Presenter"
+
+        if src_col not in df.columns:
+            continue
+
+        def resolve_presenter(src):
+            if pd.isna(src):
+                return None
+            key = str(src).replace("_youtube_txt_segmented.pkl", "")
+            return presenter_role_dict.get(key, {}).get("Presenter", "UNKNOWN")
+
+        df[pres_col] = df[src_col].apply(resolve_presenter)
+
+        # SourceFile の直後に Presenter 列を移動
+        cols = list(df.columns)
+        cols.remove(pres_col)
+        insert_idx = cols.index(src_col) + 1
+        cols.insert(insert_idx, pres_col)
+        df = df[cols]
+
+    df.to_csv(f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files/check_{actionplan_excel_sheetname}.csv", index=False)
+    print(f"✅ Presenter列を追加して上書き保存しました: {analyzed_csv_pth}")
+
+
+def return_presenter_role_dict(city_name, measure_youtube_length=False):
+    YAML_PATH = f"{ROOT}/src_rq2/inputmaterial_info.yaml"
+    with open(YAML_PATH, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    if measure_youtube_length:
+        with open(YAML_PATH, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        for city, lectures in data.items():
+            for lec, info in lectures.items():
+                url = info.get("Youtube_path")
+                if not url: continue
+                try:
+                    j = subprocess.run(
+                        ["yt-dlp", "-j", "--no-playlist", url],
+                        capture_output=True, text=True, check=True
+                    )
+                    dur = int(json.loads(j.stdout)["duration"])
+                    info["PresentationLengthSecond"] = dur
+                    print(f"{lec}: {dur}s")
+                except Exception as e:
+                    print(f"{lec}: error ({e})")
+
+        with open(YAML_PATH, "w", encoding="utf-8") as f:
+            yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+    else:
+        pass
+
+    if city_name not in data:
+        print("No City Name")
+        raise KeyError
+
+    return data[city_name]
+
+
 
 # === 使用例 ===
 if __name__ == "__main__":
-    YOUTUBE_URL = "https://www.youtube.com/watch?v=Fyi9K7_le5M"  # ← 動画URLをここに入れる
-    transcribe_youtube_to_text(YOUTUBE_URL, output_path="output.txt", language='ja')
+    YOUTUBE_URL = "https://www.youtube.com/watch?v=E4oMkCvo62w"  # ← 動画URLをここに入れる
+    transcribe_youtube_to_text(YOUTUBE_URL, output_path="4b-1.txt", language='ja')
 #     import yaml
 
 #     # YAMLファイルの読み込み

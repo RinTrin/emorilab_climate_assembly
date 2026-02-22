@@ -12,7 +12,7 @@ import seaborn as sns
 import torch
 from utils import pickle_load, input_organize, _to_np32, _finite, generate_reference_data_climate_cached
 
-def political_analysis(analyzed_csv_pth, presenter_role_dict, input_materials_pkl_pth_list):
+def political_analysis(analyzed_csv_pth, presenter_role_dict, input_materials_pkl_pth_list, actionplan_excel_sheetname):
     """
     類似度解析結果CSVを受け取り、政治的傾向の推定と可視化を実行
     - 横軸: ScoreRel（平均との差＝相対位置のみ）
@@ -26,8 +26,7 @@ def political_analysis(analyzed_csv_pth, presenter_role_dict, input_materials_pk
     # --- Top1参照回数（縦軸） ---
     df_csv = pd.read_csv(analyzed_csv_pth)
     refcount = (
-        df_csv["Top1_SourceFile"].astype(str)
-        .str.replace("_youtube_txt_segmented.pkl", "", regex=False)
+        df_csv["matched_input_pkl"]
         .value_counts()
         .rename_axis("Expert")
         .reset_index(name="RefCount")
@@ -62,11 +61,11 @@ def political_analysis(analyzed_csv_pth, presenter_role_dict, input_materials_pk
             df_plot,
             presenter_role_dict,
             save_dir=political_dir,
-            file_name=mode
+            file_name=f"{mode}_{actionplan_excel_sheetname}"
         )
 
         # CSV保存
-        df_plot.to_csv(os.path.join(political_dir, f"df_scores_{mode}.csv"), index=False)
+        df_plot.to_csv(os.path.join(political_dir, f"df_scores_{mode}_{actionplan_excel_sheetname}.csv"), index=False)
 
 
 def get_opinion_vector(analyzed_csv_pth: str, presenter_role_dict: dict) -> dict:

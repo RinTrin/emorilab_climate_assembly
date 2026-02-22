@@ -75,13 +75,15 @@ def _canon_source_key(x: str) -> str:
 
 
 
-def actor_analysis(analyzed_csv_pth, presenter_role_dict):
+def actor_analysis(analyzed_csv_pth, presenter_role_dict, actionplan_excel_sheetname):
     # Summarize by source and role
     summarize_top1_by_source_pth, summarize_top1_by_role_pth = summarize(analyzed_csv_pth, presenter_role_dict)
 
     # Visualize day by day
-    plot_presenter_data_day_by_day(summarize_top1_by_source_pth)
-    plot_role_boxplot(summarize_top1_by_source_pth)
+    day_by_day_output_path = f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/plot_presenter_data_day_by_day_{actionplan_excel_sheetname}.png"
+    plot_presenter_data_day_by_day(summarize_top1_by_source_pth, output_path=day_by_day_output_path)
+    boxplot_output_path = f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/role_boxplot_{actionplan_excel_sheetname}.png"
+    plot_role_boxplot(summarize_top1_by_source_pth, boxplot_output_path)
 
 
 def summarize(csv_path, presenter_role_dict):
@@ -159,7 +161,8 @@ def presentation_length_analysis(
     csv_path,
     presenter_role_dict,
     save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results",
-    role_colors=None
+    role_colors=None,
+    actionplan_excel_sheetname=None
 ):
     """
     固定プレゼン時間(分) × Top1参照シェア(%) を可視化。
@@ -243,8 +246,8 @@ def presentation_length_analysis(
             bbox=dict(facecolor="white", alpha=0.75, edgecolor="none"))
 
     plt.tight_layout()
-    plot_path = os.path.join(out_dir, "reference_share_vs_presentation_length_colored.png")
-    csv_out = os.path.join(out_dir, "reference_share_vs_presentation_length.csv")
+    plot_path = os.path.join(out_dir, f"reference_share_vs_presentation_length_colored_{actionplan_excel_sheetname}.png")
+    csv_out = os.path.join(out_dir, f"reference_share_vs_presentation_length_{actionplan_excel_sheetname}.csv")
     plt.savefig(plot_path, dpi=300)
     plt.close()
 
@@ -256,7 +259,8 @@ def presentation_length_analysis(
 
 
 def plot_presenter_data_day_by_day(
-    csv_path, output_path="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/plot_presenter_data_day_by_day.png"
+    csv_path, 
+    output_path=None
 ):
     df = pd.read_csv(csv_path)
 
@@ -316,7 +320,7 @@ def plot_presenter_data_day_by_day(
 
 def plot_role_boxplot(
     csv_path: str,
-    output_path: str = "/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/role_boxplot.png",
+    output_path: str = ""
 ):
     # データ読み込み
     df = pd.read_csv(csv_path)

@@ -6,6 +6,7 @@ import yaml
 import subprocess
 from time import sleep
 from pathlib import Path
+import pandas as pd
 
 from bunkai import Bunkai
 
@@ -13,6 +14,44 @@ from utils import transcribe_youtube_to_text, merge_materialtext_and_youtubetext
 from punctuation_train.predict import predict_and_insert_punctuation
 
 ROOT = "/Users/rintrin/codes/emorilab_climate_assembly"
+
+def get_sentences_actionplan_excel(excel_path, refresh_pickle=False, target_col="文章切り抜き", actionplan_excel_sheet_name=None):
+    """
+    excel_path: 1都市のactionplan Excel
+    返り値: 生成した *_segmented.pkl のパス
+
+    - 文分割しない
+    - 各シートの target_col（デフォルト: 「文章切り抜き」）列だけを取得
+    - Excelと同じディレクトリに {元xlsx名}_segmented.pkl を保存
+    """
+    excel_path = Path(excel_path)
+    if not excel_path.exists():
+        raise FileNotFoundError(f"Excel not found: {excel_path}")
+
+    segmented_pkl = excel_path.with_name(excel_path.stem + actionplan_excel_sheet_name + "_segmented.pkl")
+
+    if segmented_pkl.exists() and segmented_pkl.stat().st_size > 0 and not refresh_pickle:
+        print(f"exist {segmented_pkl}")
+        return str(segmented_pkl)
+
+    print(f"new file loading: {excel_path}")
+
+    sheet = pd.read_excel(excel_path, sheet_name=actionplan_excel_sheet_name)
+
+    sentences = []
+    if target_col not in sheet.columns:
+        raise ValueError(f"[WARN] '{target_col}' not in sheet: {actionplan_excel_sheet_name}")
+
+    col_values = sheet[target_col].dropna().astype(str).str.strip()
+    sentences.extend([s for s in col_values if s])
+
+    with open(segmented_pkl, "wb") as f:
+        pickle.dump(sentences, f)
+
+    sleep(0.2)
+    print("GET SENTENCE MODE: actionplan(excel, col=文章切り抜き) DONE")
+    return str(segmented_pkl)
+
 
 def get_sentences(city_name, mode="actionplan"):
     """
@@ -128,7 +167,7 @@ def get_sentences(city_name, mode="actionplan"):
     return segmented_pkl_pth_list
 
 
-def get_sentences_annotated(city_name, mode="inputmaterial"):
+def get_sentences_annotated(city_name, mode="inputmaterial", refresh_pickle=False):
     """
     返り値: 文分割済みPKLファイルのパスのリスト
 
@@ -157,23 +196,25 @@ def get_sentences_annotated(city_name, mode="inputmaterial"):
 
     # 2) '.' 区切り -> PKL（TXTと同ディレクトリに *_segmented.pkl）
     segmented_pkl_pth_list = []
-    split_pat = r"\.+"  # "...." の連続も区切り扱い
+    split_pat = r"[。\.]+"
 
     for txt_pth in target_txt_files:
         if not os.path.exists(txt_pth):
+            print("PATH NOT EXIST")
             continue
 
         segmented_pkl = txt_pth.replace(".txt", "_segmented.pkl")
-        if os.path.exists(segmented_pkl) and os.path.getsize(segmented_pkl) > 0:
+        if os.path.exists(segmented_pkl) and os.path.getsize(segmented_pkl) > 0 and not refresh_pickle:
             segmented_pkl_pth_list.append(segmented_pkl)
+            print(f"exist {segmented_pkl}")
             continue
 
+        print(f"new file loading: {txt_pth}")
         with open(txt_pth, "r", encoding="utf-8", errors="ignore") as f:
             text_data = f.read()
 
-        sentences = re.split(split_pat, text_data)
-        sentences = [s.replace("\n", "").strip() for s in sentences]
-        sentences = [s for s in sentences if s]  # 空文除去
+        sentences = re.findall(r"[^。]+。|[^。]+$", text_data)
+        sentences = [s.replace("\n", "").strip() for s in sentences if s.strip()]
 
         with open(segmented_pkl, "wb") as f:
             pickle.dump(sentences, f)

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 import json
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -13,7 +13,8 @@ ROOT = "/Users/rintrin/codes/emorilab_climate_assembly"
 
 class PickBest(BaseModel):
     best_id: int = Field(...)
-
+class NAJudge(BaseModel):
+    decision: Literal["OK", "N/A"]
 
 def extract_sentences(obj: Any) -> List[str]:
     if obj is None:
@@ -190,7 +191,31 @@ def gpt_pick_best_id(
         )
     
     return result
-    
+
+def gpt_delete_non_similar(client, model, action_sentence, cand_text):
+    # --- Step2: 明らかに違うならN/A（フィルタ） ---
+    resp = client.responses.parse(
+        model=model,
+        input=[
+            {"role": "system", "content":
+                # "あなたはNAフィルタ。action_sentenceとcandidateが同じ施策/同じ主張ならOK。"
+                # "別トピック/一般論/説明だけ/要件(対象・手段・数値・期限・主体)が噛み合わないならNA。"
+                # "迷ったらNA。出力はOKかNAのみ。"
+                "あなたは施策同一性の判定器です。action_sentenceとcandidateが同一施策ならOK、違えばN/Aを返してください。\n"
+                "判定は次の考え方に従うこと：\n"
+                "【最重要】何をどう変える施策かが一致しているか。\n"
+                "【重要】対象（何に対する施策か）と方向性・目的が整合しているか。\n"
+                "【補助】数値・期限・場所・主体は一致必須ではないが、明確な矛盾があればN/A。\n"
+            },
+            {"role": "user", "content": json.dumps({
+                "action_sentence": action_sentence,
+                "candidate": cand_text
+            }, ensure_ascii=False)},
+        ],
+        text_format=NAJudge,
+        reasoning={"effort": "high"},
+    )
+    return resp.output_parsed.decision == "OK"
     # PRICES_PER_1M = {
     #     "gpt-4o":   {"in": 2.50, "cin": 1.25,  "out": 10.00},  # Standard
     #     "gpt-5.2-2025-12-11": {"in": 1.75, "cin": 0.175, "out": 14.00},  # Standard（gpt-5.2と同枠）
@@ -273,13 +298,21 @@ def select_similar_sentence(
         #     pass
         # else:
         #     continue
+        if i < 5:
+            continue
+        elif i > 10:
+            ghjk
         
         out = gpt_pick_best_id_with_retry(client, model, action_sentence, candidates, temperature)
         chosen = next((c for c in candidates if c["id"] == out.best_id), candidates[0])
         print(action_sentence)
         print(out)
         print(chosen)
+        print(gpt_delete_non_similar(client, model, action_sentence, chosen["sentence"]))
         print("=====")
+        
+        
+        
 
         rows.append(
             {

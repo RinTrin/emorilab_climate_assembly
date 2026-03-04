@@ -97,70 +97,100 @@ def get_sentences(city_name, mode="actionplan"):
     target_txt_files = pdf_txt_files  # デフォはPDF由来TXT
     if mode == "inputmaterial":
         # ASR & 句読点
-        with open(f'{ROOT}/src_rq2/inputmaterial_info.yaml', 'r', encoding='utf-8') as f:
+        info_yaml_path = f'{ROOT}/src_rq2/inputmaterial_info.yaml'
+        with open(info_yaml_path, 'r', encoding='utf-8') as f:
             lecture_info = yaml.safe_load(f)
         lecture_info_city = lecture_info[str(city_name)]
 
-        for lecture_name, lecture_each_info in lecture_info_city.items():
+        #Youtube
+        youtube_city_path = f"/Users/rintrin/codes/emorilab_climate_assembly/db_youtube_txt/{city_name}"
+        if not os.path.exists(youtube_city_path):
+            os.makedirs(youtube_city_path, exist_ok=True)
+        new_lecture_info_city = lecture_info_city
+        for lecture_key, lecture_each_info in lecture_info_city.items():
             YOUTUBE_URL = lecture_each_info.get("Youtube_path")
-            yt_txt_name = lecture_each_info.get("Youtube_txt_path")
-            if not yt_txt_name:
-                continue
-
-            OUTPUT_PATH = os.path.join(f"{ROOT}/db_youtube_txt/{city_name}", yt_txt_name)
-            os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+            yt_txt_path = lecture_each_info.get("Youtube_txt_path")
+            if yt_txt_path is None:
+                yt_txt_path = f"{lecture_key}_youtube_txt.txt"
+                lecture_each_info["Youtube_txt_path"] = yt_txt_path
+            yt_txt_path = os.path.join(youtube_city_path, yt_txt_path)
+            if not os.path.exists(yt_txt_path):
+                with open(yt_txt_path, "w", encoding="utf-8") as txt_file:
+                    txt_file.write("")  # 空のファイルとして作成
+                print(f"Created: {yt_txt_path}")
+            else:
+                print(f"Skipped (already exists or missing path): {yt_txt_path}")
 
             # 既存ASRの確認
             txt = ""
-            if os.path.exists(OUTPUT_PATH):
-                with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
+            if os.path.exists(yt_txt_path):
+                with open(yt_txt_path, 'r', encoding='utf-8') as f:
                     txt = f.read()
             if txt.strip():
-                print(f"{lecture_name} : IS ALREADY DONE")
+                print(f"{lecture_key} : IS ALREADY DONE")
             elif YOUTUBE_URL:
-                transcribe_youtube_to_text(YOUTUBE_URL, output_path=OUTPUT_PATH, language='ja')
-
+                presentation_timespan = lecture_each_info.get("Presentation_timespan")
+                presentation_timespan = str(presentation_timespan)
+                presentation_length_second = transcribe_youtube_to_text(YOUTUBE_URL, presentation_timespan=presentation_timespan, output_path=yt_txt_path, language='ja')
+                lecture_each_info["PresentationLengthSecond"] = presentation_length_second
+            
             # 句読点挿入（idempotent）
-            PUNCTUATED_OUTPUT_PATH = OUTPUT_PATH.replace(".txt", "_punc_added.txt")
+            PUNCTUATED_OUTPUT_PATH = yt_txt_path.replace(".txt", "_punc_added.txt")
             if os.path.exists(PUNCTUATED_OUTPUT_PATH) and os.path.getsize(PUNCTUATED_OUTPUT_PATH) > 0:
                 print(f"{PUNCTUATED_OUTPUT_PATH} : IS ALREADY DONE")
             else:
-                predict_and_insert_punctuation(OUTPUT_PATH)
+                predict_and_insert_punctuation(yt_txt_path)
+            
+            new_lecture_info_city[lecture_key] = lecture_each_info
+        
+        # city_name 部分だけ更新（無ければ追加）
+        lecture_info[city_name] = lecture_info_city
+        # 書き戻し
+        with info_yaml_path.open("w", encoding="utf-8") as f:
+            yaml.safe_dump(
+                lecture_info,
+                f,
+                allow_unicode=True,
+                sort_keys=False,
+                default_flow_style=False,
+            )
+        
+    #     # マージ実行（戻り値なしの実装想定）
+    #     merge_materialtext_and_youtubetext(city_name, ROOT)
 
-        # マージ実行（戻り値なしの実装想定）
-        merge_materialtext_and_youtubetext(city_name, ROOT)
+    #     # マージ後TXTを拾う（例：/db_merged_txt/{city}/*.txt）
+    #     merged_dir = Path(f"{ROOT}/db_merged_txt/{city_name}")
+    #     if merged_dir.exists():
+    #         merged_txts = sorted(str(p) for p in merged_dir.glob("*.txt"))
+    #         if merged_txts:
+    #             target_txt_files = merged_txts  # 以降はマージ後TXTのみを使用
+        
+        
 
-        # マージ後TXTを拾う（例：/db_merged_txt/{city}/*.txt）
-        merged_dir = Path(f"{ROOT}/db_merged_txt/{city_name}")
-        if merged_dir.exists():
-            merged_txts = sorted(str(p) for p in merged_dir.glob("*.txt"))
-            if merged_txts:
-                target_txt_files = merged_txts  # 以降はマージ後TXTのみを使用
-
-    # 3) 文分割 -> PKL（TXTと同ディレクトリに *_segmented.pkl を作成）
+    # # 3) 文分割 -> PKL（TXTと同ディレクトリに *_segmented.pkl を作成）
     segmented_pkl_pth_list = []
-    bunkai = Bunkai()
+    # bunkai = Bunkai()
 
-    for txt_pth in target_txt_files:
-        if not os.path.exists(txt_pth):
-            print(f"[WARN] TXT not found: {txt_pth}")
-            continue
+    # for txt_pth in target_txt_files:
+    #     if not os.path.exists(txt_pth):
+    #         print(f"[WARN] TXT not found: {txt_pth}")
+    #         continue
 
-        with open(txt_pth, 'r', encoding='utf-8') as f:
-            text_data = f.read()
+    #     with open(txt_pth, 'r', encoding='utf-8') as f:
+    #         text_data = f.read()
 
-        # 文分割
-        segmenter_list = list(bunkai(text_data))
-        # 改行除去など軽い正規化
-        segmenter_list = [s.replace('\n', '') for s in segmenter_list]
+    #     # 文分割
+    #     segmenter_list = list(bunkai(text_data))
+    #     # 改行除去など軽い正規化
+    #     segmenter_list = [s.replace('\n', '') for s in segmenter_list]
 
-        # PKL 保存（TXTと同じ場所に *_segmented.pkl）
-        segmented_pkl = txt_pth.replace(".txt", "_segmented.pkl")
-        with open(segmented_pkl, 'wb') as f:
-            pickle.dump(segmenter_list, f)
+    #     # PKL 保存（TXTと同じ場所に *_segmented.pkl）
+    #     segmented_pkl = txt_pth.replace(".txt", "_segmented.pkl")
+    #     with open(segmented_pkl, 'wb') as f:
+    #         pickle.dump(segmenter_list, f)
 
-        segmented_pkl_pth_list.append(segmented_pkl)
-        sleep(0.2)
+    #     segmented_pkl_pth_list.append(segmented_pkl)
+    #     sleep(0.2)
 
     # ★ ここで PKL のリストを返す（calc_similarity_ja が想定）
     print(f"GET SENTENCE MODE:{mode} DONE")

@@ -303,7 +303,7 @@ Tsukuba:
     Inputmaterial_text_path:
     Youtube_path: https://www.youtube.com/watch?v=On_BEa8i0Ec
     Youtube_txt_path:
-    Presentation_timespan: 00:00:00,00:04:48
+    Presentation_timespan: :00:00:00,00:04:48
     PresentationLengthSecond:
   lecture2_2_2:
     Presenter: 藤井さやか

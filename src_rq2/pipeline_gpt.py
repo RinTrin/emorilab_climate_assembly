@@ -18,13 +18,17 @@ ROOT = "/Users/rintrin/codes/emorilab_climate_assembly"
 
 def pipeline(city_name=None):
 
-    input_sentences_pkl = get_sentences_annotated(city_name, mode="inputmaterial", refresh_pickle=True)  # ← マージ後TXTを使って分割
+    input_sentences_pkl = get_sentences(city_name, mode="inputmaterial")  # ← マージ後TXTを使って分割
+    hjk
+    # input_sentences_pkl = get_sentences_annotated(city_name, mode="inputmaterial", refresh_pickle=True)  # ← マージ後TXTを使って分割
     actionplan_excel_sheetname="comprehensive" # comprehensiveかdeduplication
     # actionplan_excel_sheetname = "deduplication"
     action_sentences_pkl = get_sentences_actionplan_excel("/Users/rintrin/codes/emorilab_climate_assembly/db_txt/Atugi/actionplan/厚木アクションプラン_本案_要求文整理v2.xlsx", refresh_pickle=True, actionplan_excel_sheet_name=actionplan_excel_sheetname) 
     action_sentences_pkl = [action_sentences_pkl]
     
     presenter_role_dict = return_presenter_role_dict(city_name)
+    
+    fghjk
     
     analyzed_csv_pth = select_similar_sentence(
         action_sentences_pkl,
@@ -49,7 +53,7 @@ def pipeline(city_name=None):
     # expert_words_analysis(analyzed_csv_pth, presenter_role_dict)
 
 if __name__ == '__main__':
-    city_name='Atugi'
+    city_name='Hino'
     print(f'City name: {city_name}')
     if city_name is None:
         print("No City Name")

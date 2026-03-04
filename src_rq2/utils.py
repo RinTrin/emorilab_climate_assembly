@@ -2,11 +2,12 @@ import pandas as pd
 import os
 import numpy as np
 import yaml
+import re
+import tempfile
 import subprocess
 import io
-import os
+from typing import Optional, Tuple
 from pydub import AudioSegment
-from tempfile import NamedTemporaryFile
 from openai import OpenAI  # ← これが正しいv1.xの使い方
 
 ROOT = "/Users/rintrin/codes/emorilab_climate_assembly"
@@ -45,20 +46,52 @@ client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 # client = OpenAI(api_key="sk-...")
 
 # === Step 1: YouTube音声をWAVとして取得 ===
-def get_audio_segment_from_youtube(url: str) -> AudioSegment:
-    yt_proc = subprocess.Popen(
-        ["yt-dlp", "-f", "bestaudio", "-o", "-", url],
-        stdout=subprocess.PIPE
-    )
-    ffmpeg_proc = subprocess.Popen(
-        ["ffmpeg", "-i", "pipe:0", "-f", "wav", "-ar", "16000", "-ac", "1", "pipe:1"],
-        stdin=yt_proc.stdout,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL
-    )
-    audio_bytes = ffmpeg_proc.stdout.read()
-    audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="wav")
-    return audio
+def _hms_to_seconds(hms: str) -> int:
+    h, m, s = map(int, hms.strip().split(":"))
+    return h * 3600 + m * 60 + s
+
+def _normalize_youtube_url(url: str) -> str:
+    m = re.search(r"[?&]v=([A-Za-z0-9_-]{11})", url)
+    return f"https://www.youtube.com/watch?v={m.group(1)}" if m else url
+
+def get_audio_segment_from_youtube(url: str, timespan: Optional[str] = None) -> Tuple[AudioSegment, int]:
+    url = _normalize_youtube_url(url)
+
+    # timespan parse
+    if timespan is None or timespan == "" or timespan == "None":
+        start_time = end_time = None
+    else:
+        start_time, end_time = [x.strip().lstrip(":") for x in timespan.split(",", 1)]
+
+    with tempfile.TemporaryDirectory() as d:
+        mp4_path = os.path.join(d, "src.mp4")
+        wav_path = os.path.join(d, "out.wav")
+
+        # ✅ この動画は audio-only が無いので、format 18（httpsのmp4）を固定で取る
+        ytdlp_cmd = [
+            "yt-dlp",
+            "--cookies-from-browser", "chrome",
+            "--no-playlist",
+            "-f", "18",
+            "-o", mp4_path,
+            url
+        ]
+        r = subprocess.run(ytdlp_cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            raise RuntimeError(f"yt-dlp failed:\n{r.stderr[-2000:]}")
+
+        # ffmpeg: cut + resample + mono
+        ffmpeg_cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error"]
+        if start_time and end_time:
+            ffmpeg_cmd += ["-ss", start_time, "-to", end_time]
+        ffmpeg_cmd += ["-i", mp4_path, "-vn", "-ar", "16000", "-ac", "1", "-f", "wav", wav_path]
+
+        r = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            raise RuntimeError(f"ffmpeg failed:\n{r.stderr[-2000:]}")
+
+        audio = AudioSegment.from_wav(wav_path)
+        return audio, int(len(audio) / 1000)
 
 # === Step 2: 音声分割 ===
 def split_audio(audio: AudioSegment, chunk_length_ms: int = 10 * 60 * 1000):
@@ -66,7 +99,7 @@ def split_audio(audio: AudioSegment, chunk_length_ms: int = 10 * 60 * 1000):
 
 # === Step 3: Whisper APIで書き起こし（v1.xスタイル） ===
 def transcribe_chunk_with_whisper(chunk: AudioSegment, language='ja', initial_prompt=None):
-    with NamedTemporaryFile(suffix=".wav") as temp_file:
+    with tempfile.NamedTemporaryFile(suffix=".wav") as temp_file:
         chunk.export(temp_file.name, format="wav")
         with open(temp_file.name, "rb") as f:
             response = client.audio.transcriptions.create(
@@ -78,9 +111,9 @@ def transcribe_chunk_with_whisper(chunk: AudioSegment, language='ja', initial_pr
     return response
 
 # === Step 4: 実行制御 ===
-def transcribe_youtube_to_text(url: str, output_path="transcript.txt", language='ja'):
+def transcribe_youtube_to_text(url: str, presentation_timespan=None, output_path="transcript.txt", language='ja'):
     print("🔊 音声をYouTubeから取得中...")
-    audio = get_audio_segment_from_youtube(url)
+    audio, presentation_length_second = get_audio_segment_from_youtube(url, presentation_timespan)
 
     print(f"✂️ 音声長: {len(audio) / 60000:.2f} 分 → 分割処理中...")
     chunks = split_audio(audio)
@@ -99,12 +132,15 @@ def transcribe_youtube_to_text(url: str, output_path="transcript.txt", language=
         except Exception as e:
             print(f"⚠️ チャンク {i+1} の処理中にエラーが発生しました: {e}")
             transcript_parts.append(f"[Chunk {i+1}]\n[エラー発生]\n")
+            print(e)
+            raise 
 
     full_transcript = "\n".join(transcript_parts)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(full_transcript)
 
     print(f"✅ 書き起こし完了: {output_path}")
+    return presentation_length_second
 
 def merge_materialtext_and_youtubetext(city_name, ROOT):
     import yaml
@@ -422,23 +458,6 @@ def return_presenter_role_dict(city_name, measure_youtube_length=False):
 
 
 # === 使用例 ===
-if __name__ == "__main__":
-    YOUTUBE_URL = "https://www.youtube.com/watch?v=E4oMkCvo62w"  # ← 動画URLをここに入れる
-    transcribe_youtube_to_text(YOUTUBE_URL, output_path="4b-1.txt", language='ja')
-#     import yaml
-
-#     # YAMLファイルの読み込み
-#     with open("/Users/rintrin/codes/emorilab_climate_assembly/src_rq2/inputmaterial_info.yaml", "r", encoding="utf-8") as f:
-#         data = yaml.safe_load(f)
-
-#     # テキストファイルを生成
-#     for area, lectures in data.items():
-#         for lecture_key, lecture_info in lectures.items():
-#             txt_path = lecture_info.get("Youtube_txt_path")
-#             txt_path = os.path.join("/Users/rintrin/codes/emorilab_climate_assembly/db_youtube_txt", txt_path)
-#             if txt_path and not os.path.exists(txt_path):
-#                 with open(txt_path, "w", encoding="utf-8") as txt_file:
-#                     txt_file.write("")  # 空のファイルとして作成
-#                 print(f"Created: {txt_path}")
-#             else:
-#                 print(f"Skipped (already exists or missing path): {txt_path}")
+# if __name__ == "__main__":
+    # YOUTUBE_URL = "https://www.youtube.com/watch?v=E4oMkCvo62w"  # ← 動画URLをここに入れる
+    # transcribe_youtube_to_text(YOUTUBE_URL, output_path="4b-1.txt", language='ja')

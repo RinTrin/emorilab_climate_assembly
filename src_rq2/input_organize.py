@@ -8,7 +8,7 @@ from time import sleep
 from pathlib import Path
 import pandas as pd
 
-from bunkai import Bunkai
+# from bunkai import Bunkai
 
 from utils import transcribe_youtube_to_text, merge_materialtext_and_youtubetext
 from punctuation_train.predict import predict_and_insert_punctuation
@@ -135,18 +135,18 @@ def get_sentences(city_name, mode="actionplan"):
                 lecture_each_info["PresentationLengthSecond"] = presentation_length_second
             
             # 句読点挿入（idempotent）
-            PUNCTUATED_OUTPUT_PATH = yt_txt_path.replace(".txt", "_punc_added.txt")
-            if os.path.exists(PUNCTUATED_OUTPUT_PATH) and os.path.getsize(PUNCTUATED_OUTPUT_PATH) > 0:
-                print(f"{PUNCTUATED_OUTPUT_PATH} : IS ALREADY DONE")
-            else:
-                predict_and_insert_punctuation(yt_txt_path)
+            # PUNCTUATED_OUTPUT_PATH = yt_txt_path.replace(".txt", "_punc_added.txt")
+            # if os.path.exists(PUNCTUATED_OUTPUT_PATH) and os.path.getsize(PUNCTUATED_OUTPUT_PATH) > 0:
+            #     print(f"{PUNCTUATED_OUTPUT_PATH} : IS ALREADY DONE")
+            # else:
+            #     predict_and_insert_punctuation(yt_txt_path)
             
             new_lecture_info_city[lecture_key] = lecture_each_info
         
         # city_name 部分だけ更新（無ければ追加）
         lecture_info[city_name] = lecture_info_city
         # 書き戻し
-        with info_yaml_path.open("w", encoding="utf-8") as f:
+        with open(info_yaml_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(
                 lecture_info,
                 f,

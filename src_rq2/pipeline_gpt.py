@@ -53,7 +53,7 @@ def pipeline(city_name=None):
     # expert_words_analysis(analyzed_csv_pth, presenter_role_dict)
 
 if __name__ == '__main__':
-    city_name='Hino'
+    city_name='Tsukuba'
     print(f'City name: {city_name}')
     if city_name is None:
         print("No City Name")

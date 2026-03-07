@@ -72,6 +72,11 @@ def get_audio_segment_from_youtube(url: str, timespan: Optional[str] = None) -> 
             "yt-dlp",
             "--cookies-from-browser", "chrome",
             "--no-playlist",
+
+            # ★追加：JS challenge 対応
+            "--js-runtimes", "deno",
+            "--remote-components", "ejs:github",
+
             "-f", "18",
             "-o", mp4_path,
             url

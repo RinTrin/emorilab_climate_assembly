@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Optional, Literal, Set, Tuple
 import json
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -13,8 +13,11 @@ ROOT = "/Users/rintrin/codes/emorilab_climate_assembly"
 
 class PickBest(BaseModel):
     best_id: int = Field(...)
+
+
 class NAJudge(BaseModel):
     decision: Literal["OK", "N/A"]
+
 
 def extract_sentences(obj: Any) -> List[str]:
     if obj is None:
@@ -74,7 +77,7 @@ def build_input_candidates(
             candidates.append(
                 {
                     "id": cid,
-                    "sentence": sent,  # ← clipしない
+                    "sentence": sent,
                     "input_pkl": str(pkl_path),
                     "sentence_idx": idx,
                     "lecture_key": meta.get("lecture_key"),
@@ -85,8 +88,10 @@ def build_input_candidates(
             cid += 1
     return candidates
 
+
 import time
 from openai import RateLimitError
+
 
 def gpt_pick_best_id_with_retry(
     client,
@@ -104,12 +109,11 @@ def gpt_pick_best_id_with_retry(
         except RateLimitError as e:
             last_err = e
             print("RateLimitError")
-            # ざっくり指数バックオフ（エラーメッセージの秒数を厳密パースしない簡易版）
             time.sleep(base_sleep * (1.5 ** attempt))
-        except Exception as e:
-            # TPM以外ならそのまま投げる（原因究明のため）
+        except Exception:
             raise
     raise last_err
+
 
 def build_candidates_payload(
     candidates: List[Dict[str, Any]],
@@ -117,44 +121,74 @@ def build_candidates_payload(
     id_key: str = "id",
     sentence_key: str = "sentence",
 ) -> List[Dict[str, Any]]:
-    """
-    candidates を LLM に渡すための構造化ペイロードに変換する。
-    返り値は [{"id": int, "sentence": str}, ...]
-    """
     payload: List[Dict[str, Any]] = []
     for c in candidates:
         if id_key not in c or sentence_key not in c:
             raise KeyError(f"Candidate must have keys '{id_key}' and '{sentence_key}': {c.keys()}")
 
-        # id は int 前提（ここで強制変換しておくと後段が安定）
         cid = int(c[id_key])
         sent = str(c[sentence_key])
-
         payload.append({"id": cid, "sentence": sent})
 
-    # target_ids = [141, 199, 1077, 1121, 329, 667]
-
-    id2sent = {p["id"]: p["sentence"] for p in payload}
-
-    # for idx in target_ids:
-    #     sent = id2sent.get(idx)
-    
     return payload
+
+
+def get_response_token_usage(resp) -> Dict[str, int]:
+    """
+    OpenAI Responses API のレスポンスから token usage を安全に取り出す。
+    """
+    usage = getattr(resp, "usage", None)
+    if usage is None:
+        return {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+
+    input_tokens = getattr(usage, "input_tokens", 0) or 0
+    output_tokens = getattr(usage, "output_tokens", 0) or 0
+    total_tokens = getattr(usage, "total_tokens", input_tokens + output_tokens) or (input_tokens + output_tokens)
+
+    return {
+        "input_tokens": int(input_tokens),
+        "output_tokens": int(output_tokens),
+        "total_tokens": int(total_tokens),
+    }
+
+
+def estimate_gpt54_request_cost_usd(
+    input_tokens: int,
+    output_tokens: int,
+    *,
+    threshold_input_tokens: int = 272_000,
+    base_input_price_per_1m: float = 2.50,
+    base_output_price_per_1m: float = 15.00,
+    over_threshold_input_multiplier: float = 2.0,
+    over_threshold_output_multiplier: float = 1.5,
+) -> float:
+    """
+    1リクエスト単位で GPT-5.4 の料金をUSD試算する。
+    input_tokens が 272K を超えたら、そのリクエスト全体に対して
+    input 2x, output 1.5x の単価を適用する。
+    """
+    input_price = base_input_price_per_1m
+    output_price = base_output_price_per_1m
+
+    if input_tokens > threshold_input_tokens:
+        input_price *= over_threshold_input_multiplier
+        output_price *= over_threshold_output_multiplier
+
+    return (input_tokens / 1_000_000) * input_price + (output_tokens / 1_000_000) * output_price
 
 
 def gpt_pick_best_id(
     client: OpenAI,
     model: str,
     action_sentence: str,
-    candidates: List[Dict],
+    candidates: List[Dict[str, Any]],
     temperature: float,
-) -> PickBest:
-    
+) -> Tuple[PickBest, Dict[str, int], float]:
     candidates_payload = build_candidates_payload(candidates)
     valid_ids: Set[int] = {c["id"] for c in candidates_payload}
     if not candidates_payload:
         raise ValueError("candidates is empty.")
-    
+
     system_msg = (
         "action_sentenceに最も類似度の高い1文を、候補一覧から必ず1つ選んでください。"
         "候補にない内容は作らず、候補のidだけを返してください。"
@@ -177,87 +211,67 @@ def gpt_pick_best_id(
         ],
         text_format=PickBest,
         # temperature=temperature,
-        reasoning={"effort": "high"}
+        reasoning={"effort": "high"},
     )
 
-    # parse を使っている前提：パース済みモデルが取れる
-    result: PickBest = resp.output_parsed  # ここはSDK差異があるなら適宜調整
+    usage_dict = get_response_token_usage(resp)
+    estimated_cost_usd = estimate_gpt54_request_cost_usd(
+        input_tokens=usage_dict["input_tokens"],
+        output_tokens=usage_dict["output_tokens"],
+    )
 
-    # 最重要：候補にない id を返したら即落とす（“創作ID”を完全に封じる）
+    result: PickBest = resp.output_parsed
+
     if result.best_id not in valid_ids:
         raise ValueError(
             f"Model returned invalid best_id={result.best_id}. "
             f"Valid ids include: {sorted(valid_ids)[:20]}{'...' if len(valid_ids) > 20 else ''}"
         )
-    
-    return result
 
-def gpt_delete_non_similar(client, model, action_sentence, cand_text):
-    # --- Step2: 明らかに違うならN/A（フィルタ） ---
+    return result, usage_dict, estimated_cost_usd
+
+
+def gpt_delete_non_similar(
+    client,
+    model,
+    action_sentence,
+    cand_text,
+) -> Tuple[bool, Dict[str, int], float]:
     resp = client.responses.parse(
         model=model,
         input=[
-            {"role": "system", "content":
-                # "あなたはNAフィルタ。action_sentenceとcandidateが同じ施策/同じ主張ならOK。"
-                # "別トピック/一般論/説明だけ/要件(対象・手段・数値・期限・主体)が噛み合わないならNA。"
-                # "迷ったらNA。出力はOKかNAのみ。"
-                "あなたは施策同一性の判定器です。action_sentenceとcandidateが同一施策ならOK、違えばN/Aを返してください。\n"
-                "判定は次の考え方に従うこと：\n"
-                "【最重要】何をどう変える施策かが一致しているか。\n"
-                "【重要】対象（何に対する施策か）と方向性・目的が整合しているか。\n"
-                "【補助】数値・期限・場所・主体は一致必須ではないが、明確な矛盾があればN/A。\n"
+            {
+                "role": "system",
+                "content": (
+                    "あなたは施策同一性の判定器です。action_sentenceとcandidateが同一施策ならOK、違えばN/Aを返してください。\n"
+                    "判定は次の考え方に従うこと：\n"
+                    "【最重要】何をどう変える施策かが一致しているか。\n"
+                    "【重要】対象（何に対する施策か）と方向性・目的が整合しているか。\n"
+                    "【補助】数値・期限・場所・主体は一致必須ではないが、明確な矛盾があればN/A。\n"
+                ),
             },
-            {"role": "user", "content": json.dumps({
-                "action_sentence": action_sentence,
-                "candidate": cand_text
-            }, ensure_ascii=False)},
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "action_sentence": action_sentence,
+                        "candidate": cand_text,
+                    },
+                    ensure_ascii=False,
+                ),
+            },
         ],
         text_format=NAJudge,
         reasoning={"effort": "high"},
     )
-    return resp.output_parsed.decision == "OK"
-    # PRICES_PER_1M = {
-    #     "gpt-4o":   {"in": 2.50, "cin": 1.25,  "out": 10.00},  # Standard
-    #     "gpt-5.2-2025-12-11": {"in": 1.75, "cin": 0.175, "out": 14.00},  # Standard（gpt-5.2と同枠）
-    # }
 
-    # def estimate_cost(model, input_tokens, output_tokens, cached_input_tokens=0, usd_jpy=157.0):
-    #     """
-    #     1回のAPI呼び出しコストを試算する。
-    #     - input_tokens: 総入力トークン（cached分も含む）
-    #     - cached_input_tokens: そのうちキャッシュ割引が効く入力トークン
-    #     - output_tokens: 出力トークン
-    #     - usd_jpy: 為替（円換算したいとき）
-    #     """
-    #     p = PRICES_PER_1M[model]
-    #     cached_input_tokens = min(cached_input_tokens, input_tokens)
+    usage_dict = get_response_token_usage(resp)
+    estimated_cost_usd = estimate_gpt54_request_cost_usd(
+        input_tokens=usage_dict["input_tokens"],
+        output_tokens=usage_dict["output_tokens"],
+    )
 
-    #     usd = ((input_tokens - cached_input_tokens) * p["in"]
-    #         + cached_input_tokens * p["cin"]
-    #         + output_tokens * p["out"]) / 1_000_000
-
-    #     return {"usd": usd, "jpy": usd * usd_jpy}
-    
-    # for mod in ["gpt-4o", "gpt-5.2-2025-12-11"]:
-    #     usage = resp.usage
-    #     print(usage)
-
-    #     in_tok  = getattr(usage, "input_tokens", None)
-    #     out_tok = getattr(usage, "output_tokens", None)
-
-    #     # キャッシュ内訳があれば拾う（無ければ0扱い）
-    #     cached_in_tok = getattr(usage, "cached_input_tokens", 0)
-
-    #     if in_tok is None or out_tok is None:
-    #         # ここに来たら usage のフィールド名が違う可能性が高いので、
-    #         # print(usage) の結果を見て該当キーに合わせてください。
-    #         raise ValueError("resp.usage に input_tokens / output_tokens が見つかりませんでした。")
-
-    #     a = estimate_cost(mod, in_tok, out_tok, cached_in_tok)
-    #     print(a)
-    # ghjk
-    
-    # return resp.output_parsed
+    return resp.output_parsed.decision == "OK", usage_dict, estimated_cost_usd
 
 
 def select_similar_sentence(
@@ -266,7 +280,7 @@ def select_similar_sentence(
     presenter_role_dict: Dict[str, Any],
     city_name: str,
     actionplan_excel_sheetname: str,
-    model: str = "gpt-4o",
+    model: str = "gpt-5.4",
     temperature: float = 0.0,
     out_csv_path: Optional[str] = None,
 ) -> str:
@@ -283,36 +297,57 @@ def select_similar_sentence(
     candidates = build_input_candidates(input_sentences_pkl, pklname_to_meta)
     if not candidates:
         raise ValueError("No input candidates.")
-    
+
     action_sents = [s for s in extract_sentences(pickle_load(action_pkl)) if s]
     print("action", len(action_sents))
     if not action_sents:
         raise ValueError("No action sentences.")
 
+    total_input_tokens = 0
+    total_output_tokens = 0
+    total_estimated_cost_usd = 0.0
+    request_count = 0
+
     rows = []
     for i, action_sentence in enumerate(action_sents):
-        # if action_sentence in ["1）小水力発電の可能性検討；市民は小水力発電の可能性を検討するチームに積極的に参加、協力する。",
-        #     "1）コンパクトシティ形成に向けた市民の取り組み；市にはコンパクトエリア内を小型コミュニティバスが巡回することなどを求める。",
-        #     "（1） 住まいの断熱による省エネと健康の増進；断熱材の種類や構法についても環境に配慮した選択を行う。",
-        #     "（1） 大量生産・大量消費の見直し、価値観の転換；厚木市を「リユースシティ」にする。"]:
-        #     pass
-        # else:
-        #     continue
-        if i < 5:
-            continue
-        elif i > 10:
+        if i > 10:
             ghjk
-        
-        out = gpt_pick_best_id_with_retry(client, model, action_sentence, candidates, temperature)
+
+        out, usage_pick, cost_pick = gpt_pick_best_id_with_retry(
+            client, model, action_sentence, candidates, temperature
+        )
+        total_input_tokens += usage_pick["input_tokens"]
+        total_output_tokens += usage_pick["output_tokens"]
+        total_estimated_cost_usd += cost_pick
+        request_count += 1
+
         chosen = next((c for c in candidates if c["id"] == out.best_id), candidates[0])
+
+        na_ok, usage_na, cost_na = gpt_delete_non_similar(
+            client, model, action_sentence, chosen["sentence"]
+        )
+        total_input_tokens += usage_na["input_tokens"]
+        total_output_tokens += usage_na["output_tokens"]
+        total_estimated_cost_usd += cost_na
+        request_count += 1
+
         print(action_sentence)
         print(out)
         print(chosen)
-        print(gpt_delete_non_similar(client, model, action_sentence, chosen["sentence"]))
+        print(na_ok)
+        print(
+            f"[pick_best] input_tokens={usage_pick['input_tokens']}, "
+            f"output_tokens={usage_pick['output_tokens']}, "
+            f"cost_usd=${cost_pick:.6f}, "
+            f"over_272k={usage_pick['input_tokens'] > 272000}"
+        )
+        print(
+            f"[na_judge ] input_tokens={usage_na['input_tokens']}, "
+            f"output_tokens={usage_na['output_tokens']}, "
+            f"cost_usd=${cost_na:.6f}, "
+            f"over_272k={usage_na['input_tokens'] > 272000}"
+        )
         print("=====")
-        
-        
-        
 
         rows.append(
             {
@@ -331,9 +366,22 @@ def select_similar_sentence(
 
     df = pd.DataFrame(rows)
 
+    print("=== GPT-5.4 cost estimate summary ===")
+    print(f"model: {model}")
+    print(f"request_count: {request_count}")
+    print(f"total_input_tokens: {total_input_tokens}")
+    print(f"total_output_tokens: {total_output_tokens}")
+    print(f"total_tokens: {total_input_tokens + total_output_tokens}")
+    print(f"estimated_total_cost_usd: ${total_estimated_cost_usd:.6f}")
+
     if out_csv_path is None:
         out_csv_path = str(
-            Path(ROOT) / "analysis_results" / "similar_sentence_gpt" / city_name / actionplan_excel_sheetname / "analyzed_similar_sentence.csv"
+            Path(ROOT)
+            / "analysis_results"
+            / "similar_sentence_gpt"
+            / city_name
+            / actionplan_excel_sheetname
+            / "analyzed_similar_sentence.csv"
         )
     Path(Path(out_csv_path).parent).mkdir(parents=True, exist_ok=True)
     df.to_csv(out_csv_path, index=False, encoding="utf-8-sig")

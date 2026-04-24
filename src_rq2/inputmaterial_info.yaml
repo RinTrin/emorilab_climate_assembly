@@ -54,16 +54,16 @@ Atugi:
     Youtube_txt_path: lecture2_3_youtube_txt.txt
     Presentation_timespan: None
     PresentationLengthSecond: 1187
-  lecture2_3_2:
-    Presenter: 厚木市2
-    Role: public
-    Affiliation: 厚木市環境政策課 山﨑尚裕（追加資料）
-    Pickle: lecture2_3_2_segmented.pkl
-    Pdf_path: lecture2_3_2.pdf
-    Inputmaterial_txt_path: lecture2_3_2.txt
-    Youtube_path: null
-    Presentation_timespan: None
-    Youtube_txt_path: lecture2_3_2_youtube_txt.txt
+  # lecture2_3_2:
+  #   Presenter: 厚木市2
+  #   Role: public
+  #   Affiliation: 厚木市環境政策課 山﨑尚裕（追加資料）
+  #   Pickle: lecture2_3_2_segmented.pkl
+  #   Pdf_path: lecture2_3_2.pdf
+  #   Inputmaterial_txt_path: lecture2_3_2.txt
+  #   Youtube_path: null
+  #   Presentation_timespan: None
+  #   Youtube_txt_path: lecture2_3_2_youtube_txt.txt
   lecture3_1:
     Presenter: 松原弘直
     Role: academic
@@ -173,6 +173,7 @@ Atugi:
     Youtube_path: https://www.youtube.com/watch?v=E4oMkCvo62w
     Youtube_txt_path: lecture4B_1_youtube_txt.txt
     Presentation_timespan: None
+    PresentationLengthSecond: 708
   lecture4B_2:
     Presenter: コムアソシエイツ
     Role: citizen
@@ -217,7 +218,7 @@ Atugi:
     Youtube_txt_path: lecture4B_5_youtube_txt.txt
     Presentation_timespan: None
     PresentationLengthSecond: 1517
-  lecture4B_6_1:
+  lecture4B_6:
     Presenter: 八一農園
     Role: citizen
     Affiliation: 八一農園
@@ -228,16 +229,16 @@ Atugi:
     Youtube_txt_path: lecture4B_6_1_youtube_txt.txt
     Presentation_timespan: None
     PresentationLengthSecond: 636
-  lecture4B_6_2:
-    Presenter: 八一農園
-    Role: citizen
-    Affiliation: 八一農園
-    Pickle: lecture4B_6_2_segmented.pkl
-    Pdf_path: lecture4B_6_2.pdf
-    Inputmaterial_txt_path: lecture4B_6_2.txt
-    Youtube_path: null
-    Youtube_txt_path: lecture4B_6_2_youtube_txt.txt
-    Presentation_timespan: None
+  # lecture4B_6_2:
+  #   Presenter: 八一農園
+  #   Role: citizen
+  #   Affiliation: 八一農園
+  #   Pickle: lecture4B_6_2_segmented.pkl
+  #   Pdf_path: lecture4B_6_2.pdf
+  #   Inputmaterial_txt_path: lecture4B_6_2.txt
+  #   Youtube_path: null
+  #   Youtube_txt_path: lecture4B_6_2_youtube_txt.txt
+  #   Presentation_timespan: None
   lecture4B_7:
     Presenter: 厚木市
     Role: public
@@ -394,146 +395,190 @@ Tsukuba:
     Presentation_timespan: 00:07:50,00:15:08
     PresentationLengthSecond: null
 Hino:
-  lecture1_1:
-    Presenter: 中平健二朗
-    Role: public
-    Affiliation: 日野市 環境保全課長
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?app=desktop&v=tvkmBUDLZy8&feature=youtu.be
-    Youtube_txt_path: null
-    Presentation_timespan: 00:10:35,00:28:00
-    PresentationLengthSecond: null
-  lecture1_2:
-    Presenter: 三上直之
-    Role: academic
-    Affiliation: 北海道大学 高等教育推進機構高等教育研究部 准教授
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=EihQXqXMaHM&t=1s
-    Youtube_txt_path: null
-    Presentation_timespan: None
-    PresentationLengthSecond: null
-  lecture1_3:
-    Presenter: 江守正多
-    Role: academic
-    Affiliation: 東京大学 未来ビジョン研究センター教授 国立環境研究所 上級主席研究員
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=34olNGtcnss&t=4s
-    Youtube_txt_path: null
-    Presentation_timespan: None
-    PresentationLengthSecond: null
-  lecture2_1_1:
-    Presenter: 山口真奈美
-    Role: citizen
-    Affiliation: 一般社団法人日本サステナブル・ラベル協会 代表理事
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
-    Youtube_txt_path: null
-    Presentation_timespan: 00:00:00,00:27:07
-    PresentationLengthSecond: null
-  lecture2_1_2:
-    Presenter: 星野浩伸
-    Role: citizen
-    Affiliation: 株式会社セブン-イレブン・ジャパン
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
-    Youtube_txt_path: null
-    Presentation_timespan: 00:27:08,00:50:00
-    PresentationLengthSecond: null
-  lecture2_1_3:
-    Presenter: 駒澤伸豪
-    Role: citizen
-    Affiliation: 日野市資源リサイクル事業協同組合
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
-    Youtube_txt_path: null
-    Presentation_timespan: 00:50:01,01:16:51
-    PresentationLengthSecond: null
-  lecture3_1_1:
-    Presenter: 井原雄人
-    Role: academic
-    Affiliation: 早稲田大学スマート社会技術融合研究機構 研究院客員准教授
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
-    Youtube_txt_path: null
-    Presentation_timespan: 00:00:00,00:35:42
-    PresentationLengthSecond: null
-  lecture3_1_2:
-    Presenter: 松山耕輔
-    Role: citizen
-    Affiliation: 株式会社日野自動車
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
-    Youtube_txt_path: null
-    Presentation_timespan: 00:35:43,00:50:24
-    PresentationLengthSecond: null
-  lecture3_1_3:
-    Presenter: 木原洋平
-    Role: citizen
-    Affiliation: 株式会社佐川急便
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
-    Youtube_txt_path: null
-    Presentation_timespan: 00:50:25,01:10:58
-    PresentationLengthSecond: null
-  lecture4_1_1:
-    Presenter: 磐田朋子
-    Role: academic
-    Affiliation: 芝浦工業大学 副学長
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
-    Youtube_txt_path: null
-    Presentation_timespan: 00:00:00,00:31:21
-    PresentationLengthSecond: null
-  lecture4_1_2:
-    Presenter: 古後康之
-    Role: citizen
-    Affiliation: 株式会社東京ガス
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
-    Youtube_txt_path: null
-    Presentation_timespan: 00:31:22,00:48:32
-    PresentationLengthSecond: null
-  lecture4_1_3:
-    Presenter: 笛木豊
-    Role: citizen
-    Affiliation: 株式会社富士電機
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
-    Youtube_txt_path: null
-    Presentation_timespan: 00:48:33,01:09:36
-    PresentationLengthSecond: null
-  lecture5_1:
-    Presenter: 山本良一
-    Role: academic
-    Affiliation: 東京都公立大学法人 理事長
-    Pickle: null
-    Pdf_path: null
-    Inputmaterial_text_path: null
-    Youtube_path: https://www.youtube.com/watch?v=pa8eCklm0q0&t=2s
-    Youtube_txt_path: null
-    Presentation_timespan: None
-    PresentationLengthSecond: null
+lecture1_1:
+  Presenter: 中平健二朗
+  Role: public
+  Affiliation: 日野市 環境保全課長
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?app=desktop&v=tvkmBUDLZy8&feature=youtu.be
+  Youtube_txt_path:
+  Presentation_timespan: 00:10:35,00:28:00
+  PresentationLengthSecond:
+lecture1_2:
+  Presenter: 三上直之
+  Role: academic
+  Affiliation: 北海道大学 高等教育推進機構高等教育研究部 准教授
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=EihQXqXMaHM&t=1s
+  Youtube_txt_path:
+  Presentation_timespan: None
+  PresentationLengthSecond:
+lecture1_3:
+  Presenter: 江守正多
+  Role: academic
+  Affiliation: 東京大学 未来ビジョン研究センター教授 国立環境研究所 上級主席研究員
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path:
+  Youtube_txt_path:
+  Presentation_timespan: None
+  PresentationLengthSecond: https://www.youtube.com/watch?v=34olNGtcnss&t=4s
+lecture2_1_1:
+  Presenter: 山口真奈美
+  Role: citizen
+  Affiliation: 一般社団法人日本サステナブル・ラベル協会 代表理事
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
+  Youtube_txt_path:
+  Presentation_timespan: 00:00:00,00:27:07
+  PresentationLengthSecond:
+lecture2_1_2:
+  Presenter: 星野浩伸
+  Role: citizen
+  Affiliation: 株式会社セブン-イレブン・ジャパン
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
+  Youtube_txt_path:
+  Presentation_timespan: 00:27:08,00:50:00
+  PresentationLengthSecond:
+lecture2_1_3:
+  Presenter: 駒澤伸豪
+  Role: citizen
+  Affiliation: 日野市資源リサイクル事業協同組合
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
+  Youtube_txt_path:
+  Presentation_timespan: 00:50:01,01:06:30
+  PresentationLengthSecond:
+lecture2_1_4:
+  Presenter: ナカイ
+  Role: public
+  Affiliation: 日野市環境保全課
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
+  Youtube_txt_path:
+  Presentation_timespan: 01:06:31,01:11:50
+  PresentationLengthSecond:
+lecture2_1_5:
+  Presenter: 山口真奈美
+  Role: citizen
+  Affiliation: 一般社団法人日本サステナブル・ラベル協会 代表理事
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=ZYDP5CqDcHI
+  Youtube_txt_path:
+  Presentation_timespan: 01:11:51,01:16:52
+  PresentationLengthSecond:
+lecture3_1_1:
+  Presenter: 井原雄人
+  Role: academic
+  Affiliation: 早稲田大学スマート社会技術融合研究機構 研究院客員准教授
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
+  Youtube_txt_path:
+  Presentation_timespan: 00:00:00,00:35:42
+  PresentationLengthSecond:
+lecture3_1_2:
+  Presenter: 松山耕輔
+  Role: citizen
+  Affiliation: 株式会社日野自動車
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
+  Youtube_txt_path:
+  Presentation_timespan: 00:35:43,00:50:24
+  PresentationLengthSecond:
+lecture3_1_3:
+  Presenter: 木原洋平
+  Role: citizen
+  Affiliation: 株式会社佐川急便
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
+  Youtube_txt_path:
+  Presentation_timespan: 00:50:25,01:06:23
+  PresentationLengthSecond:
+lecture3_1_4:
+  Presenter: 井原雄人
+  Role: academic
+  Affiliation: 早稲田大学スマート社会技術融合研究機構 研究院客員准教授
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=_okzuVCdrmg
+  Youtube_txt_path:
+  Presentation_timespan: 01:06:24,01:10:59
+  PresentationLengthSecond:
+lecture4_1_1:
+  Presenter: 磐田朋子
+  Role: academic
+  Affiliation: 芝浦工業大学 副学長
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
+  Youtube_txt_path:
+  Presentation_timespan: 00:00:00,00:31:21
+  PresentationLengthSecond:
+lecture4_1_2:
+  Presenter: 古後康之
+  Role: citizen
+  Affiliation: 株式会社東京ガス
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
+  Youtube_txt_path:
+  Presentation_timespan: 00:31:22,00:48:32
+  PresentationLengthSecond:
+lecture4_1_3:
+  Presenter: 笛木豊
+  Role: citizen
+  Affiliation: 株式会社富士電機
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
+  Youtube_txt_path:
+  Presentation_timespan: 00:48:33,01:04:36
+  PresentationLengthSecond:
+lecture4_1_4:
+  Presenter: 磐田朋子
+  Role: academic
+  Affiliation: 芝浦工業大学 副学長
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=7L_Stcrvng4
+  Youtube_txt_path:
+  Presentation_timespan: 01:04:37,01:09:37
+  PresentationLengthSecond:
+lecture5_1:
+  Presenter: 山本良一
+  Role: academic
+  Affiliation: 東京都公立大学法人 理事長
+  Pickle:
+  Pdf_path:
+  Inputmaterial_text_path:
+  Youtube_path: https://www.youtube.com/watch?v=pa8eCklm0q0&t=2s
+  Youtube_txt_path:
+  Presentation_timespan: None
+  PresentationLengthSecond:

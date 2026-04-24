@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from calc_similarity import SentenceBertJapanese
+from calc_similarity_bert import SentenceBertJapanese
 import umap
 import torch.nn.functional as F
 from bertopic import BERTopic

@@ -11,6 +11,7 @@ from scipy.stats import linregress
 from scipy.stats import pearsonr
 
 import torch
+from datetime import datetime
 
 # 安定化（CPU暴走防止 & 並列トークナイズ抑制）
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
@@ -75,56 +76,59 @@ def _canon_source_key(x: str) -> str:
 
 
 
-def actor_analysis(analyzed_csv_pth, presenter_role_dict, actionplan_excel_sheetname):
+def actor_analysis(analyzed_csv_pth, presenter_role_dict, actionplan_excel_sheetname, city_name):
     # Summarize by source and role
-    summarize_top1_by_source_pth, summarize_top1_by_role_pth = summarize(analyzed_csv_pth, presenter_role_dict)
+    summarize_top1_by_source_pth, summarize_top1_by_role_pth = summarize(analyzed_csv_pth, presenter_role_dict, city_name)
 
     # Visualize day by day
-    day_by_day_output_path = f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/plot_presenter_data_day_by_day_{actionplan_excel_sheetname}.png"
+    timestr = datetime.now().strftime("%Y%m%d_%H%M%S")
+    day_by_day_output_path = f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/plot_presenter_data_day_by_day_{actionplan_excel_sheetname}_{city_name}_{timestr}.png"
     plot_presenter_data_day_by_day(summarize_top1_by_source_pth, output_path=day_by_day_output_path)
-    boxplot_output_path = f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/role_boxplot_{actionplan_excel_sheetname}.png"
+    boxplot_output_path = f"/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/imgs/role_boxplot_{actionplan_excel_sheetname}_{city_name}_{timestr}.png"
     plot_role_boxplot(summarize_top1_by_source_pth, boxplot_output_path)
 
 
-def summarize(csv_path, presenter_role_dict):
+def summarize(csv_path, presenter_role_dict, city_name):
     df = pd.read_csv(csv_path)
     return summarize_top1_by_source(df, presenter_role_dict,
-        save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files"
+        save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files",city_name=city_name
     )[1], summarize_top1_by_role(
         summarize_top1_by_source(df, presenter_role_dict,
-            save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files"
+            save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files",city_name=city_name
         )[0],
         save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files"
     )[1]
 
 
-def summarize_top1_by_source(df, presenter_role_dict, save_dir="."):
+def summarize_top1_by_source(df, presenter_role_dict, save_dir=".", city_name=None):
     """
-    表1：Top1_SourceFile別の出現割合を計算し、PresenterとRoleを付加してCSV出力。
+    表1：matched_input_pkl別の出現割合を計算し、PresenterとRoleを付加してCSV出力。
     """
     # 正規化キーで集計（YAMLと必ず一致させる）
     presenter_role_dict_lc = {str(k).lower(): v for k, v in presenter_role_dict.items()}
     df = df.copy()
-    df["SourceKey"] = df["Top1_SourceFile"].apply(_canon_source_key)
+    df = df[df["similar_check"] == True]   # 追加
+    df = df[df["city_name"] == city_name]
+    df["SourceKey"] = df["matched_input_pkl"].apply(_canon_source_key)
 
     source_counts = df["SourceKey"].value_counts().reset_index()
-    source_counts.columns = ["SourceFile", "Count"]
+    source_counts.columns = ["SourceKey", "Count"]
 
     total = source_counts["Count"].sum()
     source_counts["Percentage"] = source_counts["Count"] / total * 100
 
-    source_counts["Presenter"] = source_counts["SourceFile"].map(
+    source_counts["Presenter"] = source_counts["SourceKey"].map(
         lambda k: presenter_role_dict_lc.get(str(k).lower(), {}).get("Presenter", "Unknown")
     )
-    source_counts["Role"] = source_counts["SourceFile"].map(
+    source_counts["Role"] = source_counts["SourceKey"].map(
         lambda k: presenter_role_dict_lc.get(str(k).lower(), {}).get("Role", "Unknown")
     )
 
-    summary_df = source_counts[["SourceFile", "Presenter", "Role", "Percentage"]]
+    summary_df = source_counts[["SourceKey", "Presenter", "Role", "Percentage"]]
 
     # 保存
     os.makedirs(save_dir, exist_ok=True)
-    csv_path = os.path.join(save_dir, "top1_sourcefile_summary.csv")
+    csv_path = os.path.join(save_dir, "matched_input_pkl_summary.csv")
     summary_df.to_csv(csv_path, index=False, encoding="utf-8-sig")
 
     return summary_df, csv_path
@@ -162,7 +166,8 @@ def presentation_length_analysis(
     presenter_role_dict,
     save_dir="/Users/rintrin/codes/emorilab_climate_assembly/analysis_results",
     role_colors=None,
-    actionplan_excel_sheetname=None
+    actionplan_excel_sheetname=None,
+    city_name=None
 ):
     """
     固定プレゼン時間(分) × Top1参照シェア(%) を可視化。
@@ -174,10 +179,13 @@ def presentation_length_analysis(
 
     # データ
     df = pd.read_csv(csv_path)
-    if "Top1_SourceFile" not in df.columns:
-        raise ValueError("CSVに 'Top1_SourceFile' がありません。")
+    df = df.copy()
+    df = df[df["similar_check"] == True]   # 追加
+    df = df[df["city_name"] == city_name]
+    if "matched_input_pkl" not in df.columns:
+        raise ValueError("CSVに 'matched_input_pkl' がありません。")
 
-    keys = df["Top1_SourceFile"].apply(_canon_source_key)
+    keys = df["matched_input_pkl"].apply(_canon_source_key)
     vc = keys.value_counts()
     pct = keys.value_counts(normalize=True) * 100
     counts = pd.DataFrame({"SourceFile": vc.index, "Count": vc.values, "Percentage": pct.values})
@@ -263,12 +271,12 @@ def plot_presenter_data_day_by_day(
     output_path=None
 ):
     df = pd.read_csv(csv_path)
-
+    
     def extract_day(source):
         m = re.search(r"lecture(\d+)", str(source))
         return int(m.group(1)) if m else None
 
-    df["Day"] = df["SourceFile"].apply(extract_day)
+    df["Day"] = df["SourceKey"].apply(extract_day)
 
     role_colors = {
         "academic": "#1f77b4",

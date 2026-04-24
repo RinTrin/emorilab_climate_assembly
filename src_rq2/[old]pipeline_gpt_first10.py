@@ -10,7 +10,7 @@ from input_organize import get_sentences, get_sentences_annotated, get_sentences
 from analyses import actor_analysis, presentation_length_analysis #, expert_words_analysis
 from utils import filter_top1_score, add_presenter_columns_to_analyzed_csv, pickle_load, return_presenter_role_dict
 
-from gpt_similarity import select_similar_sentence
+from calc_similarity_gpt import select_similar_sentence
 
 from political_analysis import political_analysis
 
@@ -34,7 +34,6 @@ def pipeline(city_name=None):
         pickle.dump(action_sentences_pkl_cut, f, protocol=pickle.HIGHEST_PROTOCOL)
     print("saved:", out_pth)
     out_pth = action_sentences_pkl
-
     
     presenter_role_dict = return_presenter_role_dict(city_name)
     

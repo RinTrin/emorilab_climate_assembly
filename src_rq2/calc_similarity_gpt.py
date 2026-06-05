@@ -253,6 +253,8 @@ def select_similar_sentence(
     for i, action_sentence in enumerate(action_sents):
         
         if i < 2:
+            pass
+        elif i < 371:
             continue
         
         out = gpt_pick_best_id_with_retry(client, model, action_sentence, candidates, temperature)

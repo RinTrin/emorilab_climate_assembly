@@ -9,6 +9,7 @@ import matplotlib.font_manager as fm
 import seaborn as sns
 from scipy.stats import linregress
 from scipy.stats import pearsonr
+from pathlib import Path
 
 import torch
 from datetime import datetime
@@ -49,28 +50,44 @@ _use_japanese_font()
 # --- YAMLキーと照合させるための最小正規化 ---
 def _canon_source_key(x: str) -> str:
     """
-    例:
-      'lecture4B_6_1_merged_segmented.pkl' -> 'lecture4b_6_1'
-      'Lecture4B_7.txt'                   -> 'lecture4b_7'
-    処理:
-      - ベース名のみ
-      - 多重拡張子/既知サフィックス（_segmented/_merged/_punc_added/_youtube_txt/_txt）を剥がす
-      - 'lecture'で始まる英数とアンダースコアのみを抽出
-      - 小文字化
+    YAMLキーと matched_input_pkl を照合するための正規化。
     """
     b = os.path.basename(str(x))
-    stem = b
+    stem = b.lower()
+
     # 多重拡張子を最大3回まで剥がす
     for _ in range(3):
         s, ext = os.path.splitext(stem)
         if not ext:
             break
         stem = s
-    for suf in ("_segmented", "_merged", "_punc_added", "_youtube_txt", "_txt"):
-        if stem.endswith(suf):
-            stem = stem[: -len(suf)]
-    m = re.search(r"(?i)(lecture[a-z0-9_]+)", stem)  # ignore case
+
+    suffixes = [
+        "_youtube_txt_punc_added_syusei",
+        "_youtube_txt_punc_added",
+        "_youtube_txt_syusei",
+        "_punc_added_syusei",
+        "_punc_added",
+        "_youtube_txt",
+        "_segmented",
+        "_merged",
+        "_syusei",
+        "_txt",
+    ]
+
+    # 複数 suffix が連結していても剥がしきる
+    changed = True
+    while changed:
+        changed = False
+        for suf in suffixes:
+            if stem.endswith(suf):
+                stem = stem[: -len(suf)]
+                changed = True
+                break
+
+    m = re.search(r"(lecture[a-z0-9_]+)", stem)
     key = m.group(1) if m else stem
+
     return key.lower()
 
 
@@ -102,31 +119,53 @@ def summarize(csv_path, presenter_role_dict, city_name):
 
 def summarize_top1_by_source(df, presenter_role_dict, save_dir=".", city_name=None):
     """
-    表1：matched_input_pkl別の出現割合を計算し、PresenterとRoleを付加してCSV出力。
+    matched_input_pkl別の出現割合を計算し、PresenterとRoleを付加してCSV出力。
+    参照されていない presenter も Count=0, Percentage=0 として含める。
     """
-    # 正規化キーで集計（YAMLと必ず一致させる）
-    presenter_role_dict_lc = {str(k).lower(): v for k, v in presenter_role_dict.items()}
+
     df = df.copy()
-    df = df[df["similar_check"] == True]   # 追加
+    df = df[df["similar_check"] == True]
     df = df[df["city_name"] == city_name]
     df["SourceKey"] = df["matched_input_pkl"].apply(_canon_source_key)
 
+    # 1. 参照されたSourceKeyを集計
     source_counts = df["SourceKey"].value_counts().reset_index()
     source_counts.columns = ["SourceKey", "Count"]
-
     total = source_counts["Count"].sum()
-    source_counts["Percentage"] = source_counts["Count"] / total * 100
 
-    source_counts["Presenter"] = source_counts["SourceKey"].map(
-        lambda k: presenter_role_dict_lc.get(str(k).lower(), {}).get("Presenter", "Unknown")
+    # 2. YAML順を保持
+    yaml_order_map = {
+        _canon_source_key(source_key): i
+        for i, source_key in enumerate(presenter_role_dict.keys())
+    }
+
+    # 3. YAML側から全 presenter を作る
+    presenter_rows = []
+    for source_key, info in presenter_role_dict.items():
+        canon_key = _canon_source_key(source_key)
+        presenter_rows.append({
+            "SourceKey": canon_key,
+            "Presenter": info.get("Presenter", "Unknown"),
+            "Role": info.get("Role", "Unknown"),
+            "YamlOrder": yaml_order_map.get(canon_key, 10**9),
+        })
+
+    all_presenters = pd.DataFrame(presenter_rows).drop_duplicates(subset=["SourceKey"])
+
+    # 4. left join
+    summary_df = all_presenters.merge(
+        source_counts,
+        on="SourceKey",
+        how="left"
     )
-    source_counts["Role"] = source_counts["SourceKey"].map(
-        lambda k: presenter_role_dict_lc.get(str(k).lower(), {}).get("Role", "Unknown")
-    )
 
-    summary_df = source_counts[["SourceKey", "Presenter", "Role", "Percentage"]]
+    summary_df["Count"] = summary_df["Count"].fillna(0).astype(int)
+    summary_df["Percentage"] = summary_df["Count"] / total * 100 if total > 0 else 0.0
 
-    # 保存
+    # 5. 日付順 + YAML順
+    summary_df["Day"] = summary_df["SourceKey"].str.extract(r"lecture(\d+)").astype(float)
+    summary_df = summary_df.sort_values(["Day", "YamlOrder"]).drop(columns=["Day"])
+
     os.makedirs(save_dir, exist_ok=True)
     csv_path = os.path.join(save_dir, "matched_input_pkl_summary.csv")
     summary_df.to_csv(csv_path, index=False, encoding="utf-8-sig")
@@ -283,37 +322,75 @@ def plot_presenter_data_day_by_day(
         "citizen": "#2ca02c",
         "private": "#ff7f0e",
         "public": "#d62728",
+        "Unknown": "gray",
     }
 
-    day_labels = sorted([d for d in df["Day"].unique() if d is not None])
+    day_labels = sorted([d for d in df["Day"].unique() if pd.notna(d)])
     day_mapping = {day: i for i, day in enumerate(day_labels, start=1)}
     df["DayIndex"] = df["Day"].map(day_mapping)
 
-    plt.figure(figsize=(10, 6))
+    # YAML順で並べる
+    if "YamlOrder" not in df.columns:
+        raise ValueError("YamlOrder列がありません。summarize_top1_by_source() 側で付与してください。")
+
+    df = df.sort_values(["DayIndex", "YamlOrder"]).copy()
+
+    # 同じ日内で左から右へ番号を振る
+    df["OrderInDay"] = df.groupby("DayIndex").cumcount()
+    df["NInDay"] = df.groupby("DayIndex")["SourceKey"].transform("count")
+
+    # ずらし幅は狭める
+    # 総幅が広がりすぎないように、1日あたりの最大総幅を0.24に抑える
+    max_total_span = 0.24
+
+    def calc_step(n):
+        if n <= 1:
+            return 0.0
+        return min(0.04, max_total_span / (n - 1))
+
+    df["JitterStep"] = df["NInDay"].apply(calc_step)
+
+    df["PlotX"] = df["DayIndex"] + (
+        df["OrderInDay"] - (df["NInDay"] - 1) / 2
+    ) * df["JitterStep"]
+
+    plt.figure(figsize=(12, 7))
 
     for role, group in df.groupby("Role"):
         plt.scatter(
-            group["DayIndex"],
+            group["PlotX"],
             group["Percentage"],
             color=role_colors.get(role, "gray"),
             s=100,
             label=role,
             alpha=0.8,
         )
+
         for _, row in group.iterrows():
-            if pd.isna(row["DayIndex"]):
+            if pd.isna(row["PlotX"]):
                 continue
+
+            label_y = row["Percentage"] + 0.25
+
             plt.text(
-                row["DayIndex"] + 0.1,
-                row["Percentage"],
+                row["PlotX"],
+                label_y,
                 row.get("Presenter", ""),
                 color="black",
-                ha="left",
+                ha="center",
+                va="bottom",
                 fontsize=8,
-                rotation=0,
+                rotation=30,
             )
 
-    plt.xticks(ticks=list(day_mapping.values()), labels=[f"{i}日目" for i in day_labels])
+    plt.xticks(
+        ticks=list(day_mapping.values()),
+        labels=[f"{i}日目" for i in day_labels]
+    )
+
+    ymax = df["Percentage"].max()
+    plt.ylim(bottom=-1, top=max(5, ymax * 1.15))
+
     plt.ylabel("アクションプランへの参照率（%）")
     plt.xlabel("情報提供日")
     plt.title("情報提供日とアクションプランへの参照率の関係（役割別）")
@@ -369,3 +446,205 @@ def plot_role_boxplot(
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path, dpi=300)
     plt.close()
+
+
+def create_object_role_percentage_table(csv_path: str | Path, output_path: str | Path = None) -> pd.DataFrame:
+    """
+    CSVから、アクションの客体（object）と講義者属性（matched_role）の
+    対応表を作成する。
+
+    縦軸:
+        行政、市民、事業者
+
+    横軸:
+        private, citizen, public, academic
+
+    割合の分母:
+        matched_roleごとのアクション総数
+
+    複数主体の扱い:
+        objectが「市民・行政」のように複数主体を含む場合、
+        該当するすべての主体に重複して計上する。
+
+    Parameters
+    ----------
+    csv_path : str | pathlib.Path
+        object列とmatched_role列を含むCSVファイルのパス。
+
+    Returns
+    -------
+    pandas.DataFrame
+        各セルを「xx.x%」形式で表示した対応表。
+    """
+    csv_path = Path(csv_path)
+    df = pd.read_csv(csv_path)
+
+    required_columns = {"object", "matched_role"}
+    missing_columns = required_columns - set(df.columns)
+
+    if missing_columns:
+        raise ValueError(
+            f"CSVに必要な列がありません: {sorted(missing_columns)}"
+        )
+
+    object_order = ["行政", "市民", "事業者"]
+    role_order = ["private", "citizen", "public", "academic"]
+
+    # matched_roleの表記揺れを抑える
+    df["matched_role"] = (
+        df["matched_role"]
+        .astype("string")
+        .str.strip()
+        .str.lower()
+    )
+
+    # object列を分割する。
+    # 「・」以外の区切り文字が混ざった場合にもある程度対応する。
+    def split_objects(value: object) -> list[str]:
+        if pd.isna(value):
+            return []
+
+        objects = re.split(r"[・、,／/|]+", str(value))
+
+        return [
+            item.strip()
+            for item in objects
+            if item.strip() in object_order
+        ]
+
+    df["object_list"] = df["object"].apply(split_objects)
+
+    # 複数主体を別々の行として展開する。
+    # 例: 「事業者・行政」→「事業者」と「行政」の2行
+    exploded_df = df.explode("object_list")
+
+    count_table = pd.crosstab(
+        index=exploded_df["object_list"],
+        columns=exploded_df["matched_role"],
+    )
+
+    # 行列の順序を固定する。
+    # CSV内に該当データがない属性も0として表示する。
+    count_table = count_table.reindex(
+        index=object_order,
+        columns=role_order,
+        fill_value=0,
+    )
+
+    # 分母は、各matched_roleに対応する元のアクション数。
+    # 重複展開前の行数を使う。
+    denominator = (
+        df["matched_role"]
+        .value_counts()
+        .reindex(role_order, fill_value=0)
+    )
+
+    percentage_table = count_table.div(
+        denominator.replace(0, pd.NA),
+        axis="columns",
+    )
+
+    formatted_table = percentage_table.map(
+        lambda value: "-" if pd.isna(value) else f"{value:.1%}"
+    )
+
+    formatted_table.index.name = "object"
+    formatted_table.columns.name = "matched_role"
+    
+    if output_path:
+        formatted_table.to_csv(os.path.join(output_path, "object_percentage.csv"), encoding="utf-8-sig")
+
+    return formatted_table
+
+
+def create_city_object_share_table(
+    csv_path: str | Path,
+    output_path: str | Path = None
+) -> pd.DataFrame:
+    """
+    市ごとに、object列に記載された主体の構成比を集計する。
+
+    複数主体が記載されている場合は、1行分の重みを均等配分する。
+    例:
+        「行政」           -> 行政: 1.0
+        「行政・市民」     -> 行政: 0.5, 市民: 0.5
+        「行政・市民・事業者」 -> 各主体: 1/3
+
+    各市の横方向の合計は100%になる。
+
+    Parameters
+    ----------
+    csv_path : str | pathlib.Path
+        city_name列とobject列を含むCSVファイルのパス。
+
+    Returns
+    -------
+    pandas.DataFrame
+        市ごとの主体構成比を「xx.x%」形式で表示した表。
+    """
+    csv_path = Path(csv_path)
+    df = pd.read_csv(csv_path)
+
+    required_columns = {"city_name", "object"}
+    missing_columns = required_columns - set(df.columns)
+
+    if missing_columns:
+        raise ValueError(
+            f"CSVに必要な列がありません: {sorted(missing_columns)}"
+        )
+
+    object_order = ["行政", "市民", "事業者"]
+
+    def split_objects(value: object) -> list[str]:
+        if pd.isna(value):
+            return []
+
+        items = re.split(r"[・、,／/|]+", str(value))
+
+        # 同じ主体が重複記載されていても1回だけ数える
+        return list(
+            dict.fromkeys(
+                item.strip()
+                for item in items
+                if item.strip() in object_order
+            )
+        )
+
+    df["object_list"] = df["object"].apply(split_objects)
+
+    # objectが空欄または想定外の表記になっている行を検出
+    invalid_rows = df[df["object_list"].map(len) == 0]
+
+    if not invalid_rows.empty:
+        raise ValueError(
+            "object列から主体を判定できない行があります。"
+            f" 該当行数: {len(invalid_rows)}"
+        )
+
+    # 1行の合計が必ず1になるように均等配分
+    for target_object in object_order:
+        df[target_object] = df["object_list"].apply(
+            lambda objects: (
+                1 / len(objects)
+                if target_object in objects
+                else 0
+            )
+        )
+
+    share_table = (
+        df.groupby("city_name", sort=False)[object_order]
+        .mean()
+    )
+
+    formatted_table = share_table.map(
+        lambda value: f"{value:.1%}"
+    )
+
+    formatted_table.index.name = "city_name"
+    
+    formatted_table.to_csv(
+        os.path.join(output_path, "city_object_percentage_table.csv"),
+        encoding="utf-8-sig",
+    )
+
+    return formatted_table

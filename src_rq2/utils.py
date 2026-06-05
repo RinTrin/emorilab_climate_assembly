@@ -425,41 +425,59 @@ def add_presenter_columns_to_analyzed_csv(analyzed_csv_pth, presenter_role_dict,
     print(f"✅ Presenter列を追加して上書き保存しました: {analyzed_csv_pth}")
 
 
+def _hms_to_sec(t):
+    parts = list(map(int, t.strip().split(":")))
+    return sum(x * y for x, y in zip(reversed(parts), [1, 60, 3600]))
+
+
+def _timespan_to_sec(timespan):
+    start, end = timespan.split(",")
+    return _hms_to_sec(end) - _hms_to_sec(start)
+
+
 def return_presenter_role_dict(city_name, measure_youtube_length=False):
     YAML_PATH = f"{ROOT}/src_rq2/inputmaterial_info.yaml"
+
     with open(YAML_PATH, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    if measure_youtube_length:
-        with open(YAML_PATH, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+    if city_name not in data:
+        raise KeyError(f"No City Name: {city_name}")
 
-        for city, lectures in data.items():
-            for lec, info in lectures.items():
-                url = info.get("Youtube_path")
-                if not url: continue
-                try:
-                    j = subprocess.run(
-                        ["yt-dlp", "-j", "--no-playlist", url],
-                        capture_output=True, text=True, check=True
-                    )
-                    dur = int(json.loads(j.stdout)["duration"])
-                    info["PresentationLengthSecond"] = dur
-                    print(f"{lec}: {dur}s")
-                except Exception as e:
-                    print(f"{lec}: error ({e})")
+    lectures = data[city_name]
+
+    if measure_youtube_length:
+        for lec, info in lectures.items():
+            
+            timespan = info.get("Presentation_timespan")
+
+            if timespan:
+                dur = _timespan_to_sec(timespan)
+                info["PresentationLengthSecond"] = dur
+                print(f"{city_name}/{lec}: {dur}s from timespan")
+                continue
+
+            url = info.get("Youtube_path")
+            if not url:
+                continue
+
+            try:
+                result = subprocess.run(
+                    ["yt-dlp", "-j", "--no-playlist", url],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                dur = int(json.loads(result.stdout)["duration"])
+                info["PresentationLengthSecond"] = dur
+                print(f"{city_name}/{lec}: {dur}s from YouTube")
+            except Exception as e:
+                print(f"{city_name}/{lec}: error ({e})")
 
         with open(YAML_PATH, "w", encoding="utf-8") as f:
             yaml.dump(data, f, allow_unicode=True, sort_keys=False)
-    else:
-        pass
 
-    if city_name not in data:
-        print("No City Name")
-        raise KeyError
-
-    return data[city_name]
-
+    return lectures
 
 
 # === 使用例 ===

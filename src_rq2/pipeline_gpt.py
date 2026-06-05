@@ -5,8 +5,9 @@ import subprocess
 import pickle
 
 from input_organize import get_sentences_annotated, get_sentences_actionplan_excel
-from analyses import actor_analysis, presentation_length_analysis #, expert_words_analysis
+from analyses import actor_analysis, presentation_length_analysis ,create_object_role_percentage_table, create_city_object_share_table
 from utils import filter_top1_score, add_presenter_columns_to_analyzed_csv, pickle_load, return_presenter_role_dict
+from utils_fill_matched_lecture_info import fill_matched_lecture_info
 
 from calc_similarity_gpt import select_similar_sentence
 # from calc_similarity_gpt_each_and_top3 import select_similar_sentence_top3_by_expert
@@ -24,10 +25,10 @@ def pipeline(city_name=None):
     action_sentences_pkl = get_sentences_actionplan_excel(f"/Users/rintrin/codes/emorilab_climate_assembly/db_txt/{city_name}/actionplan/actionplan_requiredsentences_list.xlsx", refresh_pickle=True, actionplan_excel_sheet_name=actionplan_excel_sheetname) 
     action_sentences_pkl = [action_sentences_pkl]
     
-    presenter_role_dict = return_presenter_role_dict(city_name)
+    presenter_role_dict = return_presenter_role_dict(city_name, measure_youtube_length=False)
     
     # analyzed_csv_pth = select_similar_sentence_top3_by_expert(
-    analyzed_csv_pth = "/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files/gpt_check_comprehensivev2.csv"
+    analyzed_csv_pth = "/Users/rintrin/codes/emorilab_climate_assembly/analysis_results/each_sentence_all_files/gpt_check_comprehensive_with_object.csv"
     
     # analyzed_csv_pth = select_similar_sentence(
     #     action_sentences_pkl,
@@ -46,6 +47,15 @@ def pipeline(city_name=None):
     
     print(analyzed_csv_pth)
     
+    fill_matched_lecture_info(
+        csv_path=analyzed_csv_pth,
+        yaml_path="inputmaterial_info.yaml",
+    )
+    
+    create_object_role_percentage_table(analyzed_csv_pth, output_path=f"{ROOT}/analysis_results/each_sentence_all_files")
+    create_city_object_share_table(analyzed_csv_pth, output_path=f"{ROOT}/analysis_results/each_sentence_all_files")
+    
+    bhjk
     # political_analysis(analyzed_csv_pth, presenter_role_dict, input_materials_pkl_pth_list=input_sentences_pkl, actionplan_excel_sheetname=actionplan_excel_sheetname)
     actor_analysis(analyzed_csv_pth, presenter_role_dict, actionplan_excel_sheetname=actionplan_excel_sheetname,city_name=city_name)
     presentation_length_analysis(analyzed_csv_pth, presenter_role_dict, actionplan_excel_sheetname=actionplan_excel_sheetname,city_name=city_name)
@@ -60,7 +70,8 @@ def pipeline(city_name=None):
 
 if __name__ == '__main__':
     # city_name='Atugi'
-    city_name='Hino'
+    city_name='Tsukuba'
+    # city_name='Hino'
     print(f'City name: {city_name}')
     if city_name is None:
         print("No City Name")
